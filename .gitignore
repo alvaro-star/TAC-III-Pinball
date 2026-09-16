@@ -1,0 +1,12 @@
+storage/
+
+# Ambiente virtual / dependencias
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Artefatos de build (cx_Freeze / freeze-core)
+build/
+dist/
+*.egg-info/

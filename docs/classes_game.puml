@@ -1,0 +1,76 @@
+@startuml classes_game
+set namespaceSeparator none
+class "Actuator" as modules.entities.actuators.actuator_base.Actuator {
+}
+class "AudioManager" as modules.audio.audio_manager.AudioManager {
+}
+class "Background" as modules.ui.background.Background {
+}
+class "Ball" as modules.entities.ball.Ball {
+}
+class "BonusRules" as modules.effects.score.bonus_rules.BonusRules {
+}
+class "Bumper" as modules.entities.obstacles.bumper.Bumper {
+}
+class "CollisionManager" as modules.physics.collision_manager.CollisionManager {
+}
+class "Display" as modules.display.Display {
+}
+class "Flipper" as modules.entities.actuators.flipper.Flipper {
+}
+class "Font" as pygame.ftfont.Font {
+}
+class "Game" as modules.game.Game {
+}
+class "GameEngine" as modules.engine.GameEngine {
+}
+class "Hole" as modules.entities.obstacles.hole.Hole {
+}
+class "InputHandler" as modules.input.input_handler.InputHandler {
+}
+class "Menu" as modules.ui.menu.Menu {
+}
+class "Obstacle" as modules.entities.obstacles.obstacle_base.Obstacle {
+}
+class "Panel" as modules.ui.panel.Panel {
+}
+class "PhysicsEngine" as modules.physics.physics_engine.PhysicsEngine {
+}
+class "Player" as modules.entities.player.Player {
+}
+class "Plunger" as modules.entities.actuators.plunger.Plunger {
+}
+class "ScoreManager" as modules.effects.score.score_manager.ScoreManager {
+}
+class "Settings" as modules.config.settings.Settings {
+}
+class "Stage" as modules.ui.stage.Stage {
+}
+class "Target" as modules.entities.obstacles.target.Target {
+}
+class "Theme" as modules.config.theme.Theme {
+}
+class "Tile" as modules.entities.tiles.Tile {
+}
+class "TileMap" as modules.entities.tiles.TileMap {
+}
+class "TrajectoryController" as modules.physics.trajectory_controller.TrajectoryController {
+}
+class "Utils" as modules.utils.Utils {
+}
+modules.entities.actuators.flipper.Flipper --|> modules.entities.actuators.actuator_base.Actuator
+modules.entities.actuators.plunger.Plunger --|> modules.entities.actuators.actuator_base.Actuator
+modules.entities.obstacles.bumper.Bumper --|> modules.entities.obstacles.obstacle_base.Obstacle
+modules.entities.obstacles.hole.Hole --|> modules.entities.obstacles.obstacle_base.Obstacle
+modules.entities.obstacles.target.Target --|> modules.entities.obstacles.obstacle_base.Obstacle
+modules.game.Game --> modules.ui.stage.Stage : stage
+modules.config.settings.Settings --* modules.ui.menu.Menu : settings
+modules.config.theme.Theme --* modules.ui.menu.Menu : theme
+modules.entities.player.Player --* modules.game.Game : player
+modules.entities.tiles.TileMap --* modules.game.Game : tile_map
+modules.physics.collision_manager.CollisionManager --* modules.physics.trajectory_controller.TrajectoryController : collision_manager
+modules.physics.trajectory_controller.TrajectoryController --* modules.entities.ball.Ball : trajectory
+modules.ui.background.Background --* modules.ui.stage.Stage : background
+modules.ui.panel.Panel --* modules.game.Game : panel
+pygame.ftfont.Font --* modules.ui.panel.Panel : font
+@enduml

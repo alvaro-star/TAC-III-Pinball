@@ -1,0 +1,104 @@
+classDiagram
+  class modules {
+  }
+  class audio {
+  }
+  class audio_manager {
+  }
+  class config {
+  }
+  class settings {
+  }
+  class theme {
+  }
+  class constants {
+  }
+  class display {
+  }
+  class editor {
+  }
+  class effects {
+  }
+  class score {
+  }
+  class bonus_rules {
+  }
+  class score_manager {
+  }
+  class engine {
+  }
+  class entities {
+  }
+  class actuators {
+  }
+  class actuator_base {
+  }
+  class flipper {
+  }
+  class plunger {
+  }
+  class ball {
+  }
+  class obstacles {
+  }
+  class bumper {
+  }
+  class hole {
+  }
+  class obstacle_base {
+  }
+  class target {
+  }
+  class player {
+  }
+  class tiles {
+  }
+  class events {
+  }
+  class actions {
+  }
+  class io {
+  }
+  class game {
+  }
+  class input {
+  }
+  class input_handler {
+  }
+  class physics {
+  }
+  class collision_manager {
+  }
+  class physics_engine {
+  }
+  class trajectory_controller {
+  }
+  class ui {
+  }
+  class background {
+  }
+  class menu {
+  }
+  class panel {
+  }
+  class stage {
+  }
+  class utils {
+  }
+  display --> constants
+  engine --> display
+  engine --> actions
+  engine --> io
+  engine --> game
+  flipper --> actuator_base
+  plunger --> actuator_base
+  bumper --> obstacle_base
+  hole --> obstacle_base
+  target --> obstacle_base
+  game --> display
+  game --> player
+  game --> tiles
+  game --> panel
+  game --> stage
+  trajectory_controller --> collision_manager
+  stage --> background

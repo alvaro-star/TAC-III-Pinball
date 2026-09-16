@@ -1,0 +1,74 @@
+classDiagram
+  class Actuator {
+  }
+  class AudioManager {
+  }
+  class Background {
+  }
+  class Ball {
+  }
+  class BonusRules {
+  }
+  class Bumper {
+  }
+  class CollisionManager {
+  }
+  class Display {
+  }
+  class Flipper {
+  }
+  class Font {
+  }
+  class Game {
+  }
+  class GameEngine {
+  }
+  class Hole {
+  }
+  class InputHandler {
+  }
+  class Menu {
+  }
+  class Obstacle {
+  }
+  class Panel {
+  }
+  class PhysicsEngine {
+  }
+  class Player {
+  }
+  class Plunger {
+  }
+  class ScoreManager {
+  }
+  class Settings {
+  }
+  class Stage {
+  }
+  class Target {
+  }
+  class Theme {
+  }
+  class Tile {
+  }
+  class TileMap {
+  }
+  class TrajectoryController {
+  }
+  class Utils {
+  }
+  Flipper --|> Actuator
+  Plunger --|> Actuator
+  Bumper --|> Obstacle
+  Hole --|> Obstacle
+  Target --|> Obstacle
+  Game --> Stage : stage
+  Settings --* Menu : settings
+  Theme --* Menu : theme
+  Player --* Game : player
+  TileMap --* Game : tile_map
+  CollisionManager --* TrajectoryController : collision_manager
+  TrajectoryController --* Ball : trajectory
+  Background --* Stage : background
+  Panel --* Game : panel
+  Font --* Panel : font

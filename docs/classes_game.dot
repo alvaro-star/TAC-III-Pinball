@@ -1,0 +1,48 @@
+digraph "classes_game" {
+rankdir=BT
+charset="utf-8"
+"modules.entities.actuators.actuator_base.Actuator" [color="black", fontcolor="black", label=<Actuator>, shape="record", style="solid"];
+"modules.audio.audio_manager.AudioManager" [color="black", fontcolor="black", label=<AudioManager>, shape="record", style="solid"];
+"modules.ui.background.Background" [color="black", fontcolor="black", label=<Background>, shape="record", style="solid"];
+"modules.entities.ball.Ball" [color="black", fontcolor="black", label=<Ball>, shape="record", style="solid"];
+"modules.effects.score.bonus_rules.BonusRules" [color="black", fontcolor="black", label=<BonusRules>, shape="record", style="solid"];
+"modules.entities.obstacles.bumper.Bumper" [color="black", fontcolor="black", label=<Bumper>, shape="record", style="solid"];
+"modules.physics.collision_manager.CollisionManager" [color="black", fontcolor="black", label=<CollisionManager>, shape="record", style="solid"];
+"modules.display.Display" [color="black", fontcolor="black", label=<Display>, shape="record", style="solid"];
+"modules.entities.actuators.flipper.Flipper" [color="black", fontcolor="black", label=<Flipper>, shape="record", style="solid"];
+"pygame.ftfont.Font" [color="black", fontcolor="black", label=<Font>, shape="record", style="solid"];
+"modules.game.Game" [color="black", fontcolor="black", label=<Game>, shape="record", style="solid"];
+"modules.engine.GameEngine" [color="black", fontcolor="black", label=<GameEngine>, shape="record", style="solid"];
+"modules.entities.obstacles.hole.Hole" [color="black", fontcolor="black", label=<Hole>, shape="record", style="solid"];
+"modules.input.input_handler.InputHandler" [color="black", fontcolor="black", label=<InputHandler>, shape="record", style="solid"];
+"modules.ui.menu.Menu" [color="black", fontcolor="black", label=<Menu>, shape="record", style="solid"];
+"modules.entities.obstacles.obstacle_base.Obstacle" [color="black", fontcolor="black", label=<Obstacle>, shape="record", style="solid"];
+"modules.ui.panel.Panel" [color="black", fontcolor="black", label=<Panel>, shape="record", style="solid"];
+"modules.physics.physics_engine.PhysicsEngine" [color="black", fontcolor="black", label=<PhysicsEngine>, shape="record", style="solid"];
+"modules.entities.player.Player" [color="black", fontcolor="black", label=<Player>, shape="record", style="solid"];
+"modules.entities.actuators.plunger.Plunger" [color="black", fontcolor="black", label=<Plunger>, shape="record", style="solid"];
+"modules.effects.score.score_manager.ScoreManager" [color="black", fontcolor="black", label=<ScoreManager>, shape="record", style="solid"];
+"modules.config.settings.Settings" [color="black", fontcolor="black", label=<Settings>, shape="record", style="solid"];
+"modules.ui.stage.Stage" [color="black", fontcolor="black", label=<Stage>, shape="record", style="solid"];
+"modules.entities.obstacles.target.Target" [color="black", fontcolor="black", label=<Target>, shape="record", style="solid"];
+"modules.config.theme.Theme" [color="black", fontcolor="black", label=<Theme>, shape="record", style="solid"];
+"modules.entities.tiles.Tile" [color="black", fontcolor="black", label=<Tile>, shape="record", style="solid"];
+"modules.entities.tiles.TileMap" [color="black", fontcolor="black", label=<TileMap>, shape="record", style="solid"];
+"modules.physics.trajectory_controller.TrajectoryController" [color="black", fontcolor="black", label=<TrajectoryController>, shape="record", style="solid"];
+"modules.utils.Utils" [color="black", fontcolor="black", label=<Utils>, shape="record", style="solid"];
+"modules.entities.actuators.flipper.Flipper" -> "modules.entities.actuators.actuator_base.Actuator" [arrowhead="empty", arrowtail="none"];
+"modules.entities.actuators.plunger.Plunger" -> "modules.entities.actuators.actuator_base.Actuator" [arrowhead="empty", arrowtail="none"];
+"modules.entities.obstacles.bumper.Bumper" -> "modules.entities.obstacles.obstacle_base.Obstacle" [arrowhead="empty", arrowtail="none"];
+"modules.entities.obstacles.hole.Hole" -> "modules.entities.obstacles.obstacle_base.Obstacle" [arrowhead="empty", arrowtail="none"];
+"modules.entities.obstacles.target.Target" -> "modules.entities.obstacles.obstacle_base.Obstacle" [arrowhead="empty", arrowtail="none"];
+"modules.game.Game" -> "modules.ui.stage.Stage" [arrowhead="vee", arrowtail="none", fontcolor="green", label="stage", style="solid"];
+"modules.config.settings.Settings" -> "modules.ui.menu.Menu" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="settings", style="solid"];
+"modules.config.theme.Theme" -> "modules.ui.menu.Menu" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="theme", style="solid"];
+"modules.entities.player.Player" -> "modules.game.Game" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="player", style="solid"];
+"modules.entities.tiles.TileMap" -> "modules.game.Game" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="tile_map", style="solid"];
+"modules.physics.collision_manager.CollisionManager" -> "modules.physics.trajectory_controller.TrajectoryController" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="collision_manager", style="solid"];
+"modules.physics.trajectory_controller.TrajectoryController" -> "modules.entities.ball.Ball" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="trajectory", style="solid"];
+"modules.ui.background.Background" -> "modules.ui.stage.Stage" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="background", style="solid"];
+"modules.ui.panel.Panel" -> "modules.game.Game" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="panel", style="solid"];
+"pygame.ftfont.Font" -> "modules.ui.panel.Panel" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="font", style="solid"];
+}

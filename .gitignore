@@ -1,0 +1,14 @@
+# Ambiente virtual / dependências
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Logs gerados em execução
+game.log
+storage/
+
+# Artefatos de build (cx_Freeze)
+build/
+dist/
+*.egg-info/

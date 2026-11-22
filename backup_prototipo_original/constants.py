@@ -1,47 +1,23 @@
-import pygame
-import math
-
-# Set up window size and title
-# nHD - 1/9 of full HD - 360p (height) - pixel art
-#WIDTH, HEIGHT = 640, 360    # constant for PC - scales x2, x3, etc. 16x9 ratio
-SCALE = 1   # for pixel art
-WIDTH, HEIGHT = 1920//SCALE, 1080//SCALE   # full HD - precisa usar dirty sprites - vetorial
-
-#pygame.display.init()
-#info = pygame.display.Info()    # vetorial dirty sprites
-#WIDTH, HEIGHT = (info.current_w, info.current_h)
-#SCALE = 1
-
-#LV1_W = WIDTH * 10
-#LV1_H = HEIGHT * 1
-TITLE = "Game TAC3"
-FPS = 0
-# Physics constants
-#FIXED_DT = 1 / 60.0  # Force physics to update at 60 FPS steps
-
-#TEXT_FPS = 30 // SCALE
-
-COLOR_TEXT = pygame.Color("#087204")
-COLOR_BG = pygame.Color("#5C94FC")
-
-GRAVITY = 1200
-SIZE_PLAYER = (60//SCALE, 100//SCALE)
-
-# Layer constants for performance rendering
-'''LAYER_BACKGROUND = 0
-LAYER_FOREGROUND = LAYER_BACKGROUND + 1
-LAYER_CENARIO = LAYER_FOREGROUND + 1
-LAYER_OBJECTS = LAYER_CENARIO + 1
-LAYER_PLAYER = LAYER_OBJECTS + 1'''
-
-TILE_CROP = 16  # pixels
-TILE_SIZE = 32  # pixels
-MAP_W = math.ceil(WIDTH / TILE_SIZE)
-MAP_H = math.ceil(HEIGHT / TILE_SIZE)
-
-FILE_LV1 = "source/data/lv1.npz"
-FILE_LV1_JSON = 'source/data/level1.json'
-FILE_MAP_1 = "assets/image/bg-1-1.png"
-FILE_PLAYER_1 = "assets/image/player.png"
-FILE_SPRITES_PLAYER = "assets/image/sprites3.png"
-
+"""Constantes do pinball - coordenadas lógicas independentes da resolução."""
+WIDTH = 720
+HEIGHT = 900
+TITLE = "TAC III - Pinball Arcade"
+FPS = 60  # RNF2: a execução visa 60 fps; mínimo exigido 30
+FIXED_DT = 1.0 / 120.0  # física com integração estável a 120 Hz
+GRAVITY = 970.0  # px/s², eixo y positivo para baixo
+DRAG = 0.085  # resistência ao movimento por segundo
+MAX_SPEED = 1700.0
+BALL_RADIUS = 11.0
+LEFT = 105.0
+RIGHT = 615.0
+TOP = 122.0
+BOTTOM = 849.0
+LAUNCH_X = 590.0
+LAUNCH_Y = 783.0
+BALLS_PER_PLAYER = 3
+START_BONUS_DURATION = 12.0
+COLORS = {
+    'bg': (6, 11, 24), 'panel': (13, 24, 46), 'frame': (45, 137, 230),
+    'white': (236, 248, 255), 'muted': (137, 172, 210), 'gold': (255, 196, 54),
+    'cyan': (51, 222, 249), 'pink': (246, 89, 165), 'red': (250, 74, 88),
+}

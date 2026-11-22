@@ -1,0 +1,87 @@
+{
+  "descricao": "Atlas PNG com recortes das 3 pranchas PINBALL1/PINBALL2/PINBALL3",
+  "atlas": "pinball_atlas.png",
+  "largura": 640,
+  "altura": 480,
+  "origens": {
+    "bumper_blue": "PINBALL2.png",
+    "bumper_gold": "PINBALL2.png",
+    "bumper_pink": "PINBALL2.png",
+    "bumper_red": "PINBALL3.png",
+    "ball": "PINBALL3.png",
+    "target25": "PINBALL2.png",
+    "target10": "PINBALL2.png",
+    "target50": "PINBALL2.png",
+    "arrow_left": "PINBALL2.png",
+    "arrow_right": "PINBALL2.png",
+    "icon_2x": "PINBALL1.png"
+  },
+  "sprites": {
+    "bumper_blue": {
+      "x": 12,
+      "y": 12,
+      "w": 121,
+      "h": 123
+    },
+    "bumper_gold": {
+      "x": 145,
+      "y": 12,
+      "w": 118,
+      "h": 121
+    },
+    "bumper_pink": {
+      "x": 275,
+      "y": 12,
+      "w": 134,
+      "h": 136
+    },
+    "bumper_red": {
+      "x": 421,
+      "y": 12,
+      "w": 131,
+      "h": 130
+    },
+    "ball": {
+      "x": 12,
+      "y": 160,
+      "w": 67,
+      "h": 67
+    },
+    "target25": {
+      "x": 91,
+      "y": 160,
+      "w": 92,
+      "h": 93
+    },
+    "target10": {
+      "x": 195,
+      "y": 160,
+      "w": 94,
+      "h": 95
+    },
+    "target50": {
+      "x": 301,
+      "y": 160,
+      "w": 95,
+      "h": 94
+    },
+    "arrow_left": {
+      "x": 408,
+      "y": 160,
+      "w": 86,
+      "h": 87
+    },
+    "arrow_right": {
+      "x": 506,
+      "y": 160,
+      "w": 86,
+      "h": 89
+    },
+    "icon_2x": {
+      "x": 12,
+      "y": 267,
+      "w": 88,
+      "h": 87
+    }
+  }
+}

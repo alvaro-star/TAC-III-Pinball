@@ -1,17 +1,12 @@
 classDiagram
-  class Display {
-  }
-  class Font {
-  }
-  class Game {
-  }
-  class GameEngine {
-  }
-  class Level1 {
-  }
-  class Panel {
-  }
-  class Player {
-  }
-  Player --* Game : player
-  Font --* Panel : font
+  Actuator <|-- Flipper
+  Actuator <|-- Plunger
+  Obstacle <|-- Bumper
+  Obstacle <|-- Target
+  Obstacle <|-- Hole
+  Game *-- Ball
+  Game *-- Flipper
+  Game *-- PlayerScore
+  Ball --> TrajectoryController
+  TrajectoryController --> CollisionManager
+  Stage *-- SpriteSheet

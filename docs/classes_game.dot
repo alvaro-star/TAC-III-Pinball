@@ -1,13 +1,41 @@
-digraph "classes_game" {
-rankdir=BT
-charset="utf-8"
-"modules.display.Display" [color="black", fontcolor="black", label=<Display>, shape="record", style="solid"];
-"pygame.ftfont.Font" [color="black", fontcolor="black", label=<Font>, shape="record", style="solid"];
-"modules.game.Game" [color="black", fontcolor="black", label=<Game>, shape="record", style="solid"];
-"modules.engine.GameEngine" [color="black", fontcolor="black", label=<GameEngine>, shape="record", style="solid"];
-"modules.ui.level1.Level1" [color="black", fontcolor="black", label=<Level1>, shape="record", style="solid"];
-"modules.ui.panel.Panel" [color="black", fontcolor="black", label=<Panel>, shape="record", style="solid"];
-"modules.entities.player.Player" [color="black", fontcolor="black", label=<Player>, shape="record", style="solid"];
-"modules.entities.player.Player" -> "modules.game.Game" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="player", style="solid"];
-"pygame.ftfont.Font" -> "modules.ui.panel.Panel" [arrowhead="diamond", arrowtail="none", fontcolor="green", label="font", style="solid"];
+digraph classes_game {
+    graph [bgcolor="white",rankdir=TB,ranksep=0.75,nodesep=0.45,splines=polyline];
+    node [shape=record,style="filled",fillcolor="#EAF3FA",color="#30678D",fontname=Arial,fontsize=12];
+    edge [color="#66799A",arrowsize=0.65,fontsize=10,fontname=Arial];
+    GameEngine [label="{GameEngine|display, input, game, audio|run()}"];
+    Display [label="{Display|backend, surface|tick()\npresent()}"];
+    Game [label="{Game|players, balls, state|start_game()\nupdate(dt)\ncollide_world()}"];
+    InputManager [label="{InputManager|left,right,launch|handle(event,game)}"];
+    AudioManager [label="{AudioManager|sounds,muted|sound(),music_start()}"];
+    Stage [label="{Stage|base,images|draw_playfield(),draw_hud()}"];
+    SpriteSheet [label="{SpriteSheet|sheet,sprites,cache|get(name)}"];
+    PlayerScore [label="{PlayerScore|score, remaining|add_points(),multiplier()}"];
+    Ball [label="{Ball|position, velocity, radius|launch(),update()}"];
+    TrajectoryController [label="{TrajectoryController|collision_manager|step(ball,dt)}"];
+    CollisionManager [label="{CollisionManager| |circle_circle(),circle_segment()}"];
+    Actuator [label="{Actuator| |activate()}"];
+    Flipper [label="{Flipper|pivot,angle|update(),moving_at()}"];
+    Plunger [label="{Plunger|charge|update(),release()}"];
+    Obstacle [label="{Obstacle|x,y,radius|on_collide()}"];
+    Bumper [label="{Bumper|points|on_collide()}"];
+    Target [label="{Target|points|on_collide()}"];
+    Hole [label="{Hole|points|on_collide()}"];
+    Flipper -> Actuator [arrowhead=empty,label="herança"];
+    Plunger -> Actuator [arrowhead=empty];
+    Bumper -> Obstacle [arrowhead=empty,label="herança"];
+    Target -> Obstacle [arrowhead=empty];
+    Hole -> Obstacle [arrowhead=empty];
+    GameEngine -> Display [arrowtail=diamond,dir=both];
+    GameEngine -> Game [arrowtail=diamond,dir=both];
+    GameEngine -> InputManager [arrowtail=diamond,dir=both];
+    GameEngine -> AudioManager [arrowtail=diamond,dir=both];
+    Game -> Stage [label="usa"];
+    Stage -> SpriteSheet [arrowtail=diamond,dir=both,label="recortes do atlas"];
+    Game -> Ball [arrowtail=diamond,dir=both,label="* bolas"];
+    Game -> PlayerScore [arrowtail=diamond,dir=both,label="1..2 jogadores"];
+    Game -> Flipper [arrowtail=diamond,dir=both,label="2 flippers"];
+    Game -> Plunger [arrowtail=diamond,dir=both];
+    Game -> Obstacle [label="obstáculos"];
+    Ball -> TrajectoryController [label="delega"];
+    TrajectoryController -> CollisionManager [label="delega"];
 }

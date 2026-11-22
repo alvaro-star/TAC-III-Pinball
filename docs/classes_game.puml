@@ -1,0 +1,11 @@
+@startuml
+Actuator <|-- Flipper
+Actuator <|-- Plunger
+Obstacle <|-- Bumper
+Obstacle <|-- Target
+Obstacle <|-- Hole
+Game *-- Ball
+Ball --> TrajectoryController
+TrajectoryController --> CollisionManager
+Stage *-- SpriteSheet
+@enduml

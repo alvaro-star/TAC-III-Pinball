@@ -1,0 +1,30 @@
+@startuml
+package audio {}
+package config {}
+package constants {}
+package display {}
+package effects {}
+package engine {}
+package entities {}
+package game {}
+package input {}
+package physics {}
+package ui {}
+display --> constants
+game --> constants
+game --> effects
+game --> entities
+game --> physics
+game --> ui
+engine --> audio
+engine --> constants
+engine --> display
+engine --> game
+engine --> input
+effects --> constants
+ui --> constants
+physics --> constants
+config --> constants
+entities --> constants
+entities --> physics
+@enduml

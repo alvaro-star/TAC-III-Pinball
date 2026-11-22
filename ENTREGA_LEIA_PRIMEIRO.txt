@@ -1,0 +1,33 @@
+PINBALL — TAC III | ENTREGA PARA ABRIR NO VS CODE
+
+1. Extraia o ZIP inteiro.
+2. No VS Code, escolha Arquivo > Abrir Pasta e selecione Pinball_TACIII_Python.
+3. No Terminal (PowerShell) da pasta principal, execute:
+
+   py -3.12 -m venv .venv
+   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   .\.venv\Scripts\python.exe VERIFICAR_AMBIENTE.py
+   .\.venv\Scripts\python.exe main.py
+
+4. No VS Code: Ctrl+Shift+P > Python: Select Interpreter > .venv\Scripts\python.exe.
+5. Para depurar: F5 > Pinball TAC III (Pygame + OpenGL).
+
+DOCUMENTOS IMPORTANTES:
+- docs/entrega/GDD_COM_ANEXO_TECNICO.docx - GDD acrescido do mapa de modulos, sprites e audio.
+- docs/entrega/GDD_original.docx - GDD original, inalterado.
+- docs/entrega/GUIA_VSCODE_WINDOWS.md - passo a passo com solucoes de erros.
+- docs/entrega/MAPA_DE_MODULOS_APRESENTACAO.md - roteiro para a apresentacao.
+- docs/entrega/MATRIZ_DE_CONFORMIDADE.md - requisitos RF1-RF13 e RNF1-RNF5.
+- docs/entrega/TESTE_MANUAL_WINDOWS.md - checklist de validacao no Windows.
+
+PONTOS PARA MOSTRAR AO PROFESSOR:
+- Código: main.py > source/modules/engine.py > game.py.
+- OpenGL: source/modules/display.py.
+- Sprite sheets recebidas: assets/pinball/PINBALL1.png, PINBALL2.png, PINBALL3.png.
+- Atlas realmente usado no jogo: assets/pinball/pinball_atlas.png + pinball_atlas.json.
+- Recorte em runtime: source/modules/ui/sprite_sheet.py.
+- Audio usado pelo jogo: assets/sound/*.wav; código audio_manager.py.
+- Física: source/modules/physics/.
+- Diagramas: docs/packages_game.png, docs/classes_game.png.
+
+VALIDACAO: testes automatizados não substituem teste real de janela, audio e FPS em Windows.

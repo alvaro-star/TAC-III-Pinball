@@ -1,6 +1,6 @@
 """Diagrama de pacotes a partir de AST de imports e diagrama de classes em Graphviz.
 
-Execução: python source/docs/generate.py
+Execução: python docs/generate.py
 Opcional: instalar 'graphviz' (dot) e 'pylint' (pyreverse) para integração UML.
 """
 from __future__ import annotations
@@ -10,38 +10,50 @@ import subprocess
 import shutil
 import re
 
-ROOT = Path(__file__).resolve().parents[2]
-MODULES = ROOT/'source'/'modules'
+ROOT = Path(__file__).resolve().parents[1]
+MODULES = ROOT/'modulos'
 DOCS = ROOT/'docs'
-PACKAGE_NAMES = {'engine','display','game','input','physics','entities','audio','ui','effects','config','constants'}
+PACKAGE_NAMES = {'engine','display','game','events','physics','entities','audio','ui','effects','config','constants'}
+
+
+CORE = ('engine','display','game','constants')
+# Arquivos herdados do protótipo de plataforma, fora do pinball.
+LEGACY = {'editor.py','utils.py','entities/player.py','entities/tiles.py','events/actions.py',
+          'events/io.py','ui/background.py','ui/level1.py','ui/panel.py'}
+
+
+def module_files():
+    """Lista os módulos do pinball: núcleo na raiz e pacotes em modulos/."""
+    files=[ROOT/f'{name}.py' for name in CORE]
+    files+=[p for p in MODULES.rglob('*.py') if p.relative_to(MODULES).as_posix() not in LEGACY]
+    return files
 
 
 def find_deps(filename:Path):
-    """Obtém dependências diretas de um módulo da pasta source/modules."""
+    """Obtém dependências diretas de um módulo do núcleo ou de modulos/."""
     node=ast.parse(filename.read_text(encoding='utf-8'))
-    parts=filename.relative_to(MODULES).with_suffix('').parts
-    if parts[-1]=='__init__': parts=parts[:-1]
-    current=list(parts[:-1])
+    current=[] if filename.parent==ROOT else list(filename.relative_to(MODULES).parts[:-1])
     out=set()
+    def register(parts):
+        if parts and parts[0]=='modulos':parts=parts[1:]
+        if parts and parts[0] in PACKAGE_NAMES:out.add(parts[0])
     for entry in ast.walk(node):
         if isinstance(entry,ast.ImportFrom):
-            if not entry.level:continue
-            prefix = current[:max(0,len(current)-(entry.level-1))]
-            if entry.module:prefix+=entry.module.split('.')
-            if prefix and prefix[0] in PACKAGE_NAMES:out.add(prefix[0])
+            if entry.level:
+                prefix=current[:max(0,len(current)-(entry.level-1))]
+                register(prefix+(entry.module.split('.') if entry.module else []))
+            elif entry.module:
+                register(entry.module.split('.'))
         elif isinstance(entry,ast.Import):
-            for alias in entry.names:
-                if alias.name.startswith('source.modules.'):
-                    out.add(alias.name.split('.')[2])
+            for alias in entry.names:register(alias.name.split('.'))
     return out
 
 
 def packages():
     mapping={}
-    for path in MODULES.rglob('*.py'):
+    for path in module_files():
         if path.name=='__init__.py':continue
-        rel=path.relative_to(MODULES)
-        depname=rel.stem if len(rel.parts)==1 else rel.parts[0]
+        depname=path.stem if path.parent==ROOT else path.relative_to(MODULES).parts[0]
         if depname not in PACKAGE_NAMES:continue
         mapping.setdefault(depname,set()).update(find_deps(path))
     return {k:sorted(x for x in v if x!=k) for k,v in mapping.items()}

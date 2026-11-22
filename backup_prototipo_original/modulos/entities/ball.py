@@ -1,5 +1,5 @@
 """Bola: usa TrajectoryController em vez de implementar sua física internamente."""
-from ..constants import BALL_RADIUS, LAUNCH_X, LAUNCH_Y
+from constants import BALL_RADIUS, LAUNCH_X, LAUNCH_Y
 from ..physics.collision_manager import Vector
 
 

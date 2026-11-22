@@ -1,7 +1,7 @@
 """A posição é calculada usando v_t=v_(t-1)+aΔt; p_t=p_(t-1)+v_tΔt."""
 import math
 from .collision_manager import Vector
-from ..constants import GRAVITY, DRAG, MAX_SPEED
+from constants import GRAVITY, DRAG, MAX_SPEED
 
 
 class TrajectoryController:

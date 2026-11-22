@@ -4,7 +4,7 @@ import random
 from pathlib import Path
 import pygame
 from .sprite_sheet import SpriteSheet
-from ..constants import WIDTH, HEIGHT, LEFT, RIGHT, TOP, BOTTOM, COLORS
+from constants import WIDTH, HEIGHT, LEFT, RIGHT, TOP, BOTTOM, COLORS
 
 
 class Stage:

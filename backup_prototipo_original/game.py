@@ -1,12 +1,12 @@
 """Regras do pinball - estados, jogo para 1-2 pessoas, pontuação e vidas."""
-from .constants import LEFT, RIGHT, TOP, BOTTOM, LAUNCH_X, LAUNCH_Y
-from .physics.collision_manager import Vector, CollisionManager
-from .physics.trajectory_controller import TrajectoryController
-from .entities.ball import Ball
-from .entities.actuators import Flipper, Plunger
-from .entities.obstacles import Bumper, Target, Hole
-from .effects.score import PlayerScore
-from .ui.stage import Stage
+from constants import LEFT, RIGHT, TOP, BOTTOM, LAUNCH_X, LAUNCH_Y
+from modulos.physics.collision_manager import Vector, CollisionManager
+from modulos.physics.trajectory_controller import TrajectoryController
+from modulos.entities.ball import Ball
+from modulos.entities.actuators import Flipper, Plunger
+from modulos.entities.obstacles import Bumper, Target, Hole
+from modulos.effects.score import PlayerScore
+from modulos.ui.stage import Stage
 
 
 class Game:

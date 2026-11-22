@@ -1,6 +1,6 @@
 """Janela Pygame, renderização em OpenGL por padrão e compatibilidade opcional."""
 import pygame
-from .constants import WIDTH, HEIGHT, TITLE, FPS
+from constants import WIDTH, HEIGHT, TITLE, FPS
 
 
 class Display:

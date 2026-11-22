@@ -1,6 +1,6 @@
 """Pontuação, combos, multiplicadores temporários e condições de multiball."""
 from dataclasses import dataclass
-from ..constants import BALLS_PER_PLAYER, START_BONUS_DURATION
+from constants import BALLS_PER_PLAYER, START_BONUS_DURATION
 
 
 @dataclass

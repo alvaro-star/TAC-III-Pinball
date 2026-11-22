@@ -20,7 +20,7 @@ Esta matriz foi elaborada a partir do documento **UNI - TAC III - GDD de Pinball
 | RNF1 | Rodar em PC Windows | `main.py`, `.vscode/launch.json`, `INICIAR_JOGO_WINDOWS.bat`, `requirements.txt` | Estrutura Windows criada; execução real pendente |
 | RNF2 | Mínimo 30 FPS | `constants.FPS=60`, `display.py` | **Não comprovado** sem benchmark Windows |
 | RNF3 | Compatibilidade com resoluções comuns | `display.py`: janela proporcional ajustada à tela | Código revisado; teste em diferentes monitores pendente |
-| RNF4 | Código modular | `source/modules/{engine,display,input,physics,entities,audio,effects,ui,config}` | Organização/compilação confirmadas |
+| RNF4 | Código modular | `modulos/{engine,display,input,physics,entities,audio,effects,ui,config}` | Organização/compilação confirmadas |
 | RNF5 | Recursos de imagem/som leves | sprites PNG recortados e áudios WAV mono de baixa duração | Arquivos presentes; benchmark de memória pendente |
 
 ## Equações do GDD

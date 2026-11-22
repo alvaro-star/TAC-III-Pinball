@@ -15,9 +15,9 @@
 
 1. Extraia o arquivo `.zip` usando **Extrair Tudo** no Windows.
 2. Abra **Visual Studio Code → File / Arquivo → Open Folder / Abrir Pasta**.
-3. Selecione a pasta extraída **`Pinball_TACIII_Python`** — nela aparecem `main.py`, `requirements.txt`, `source` e `assets`.
+3. Selecione a pasta extraída **`Pinball_TACIII_Python/backup_prototipo_original`** — nela aparecem `main.py`, `requirements.txt`, `source` e `assets`.
 4. Confirme o espaço de trabalho, caso o VS Code pergunte se você confia na pasta.
-5. Abra **Terminal → New Terminal / Novo Terminal**. O terminal deve estar nessa pasta, não dentro de `source/modules`.
+5. Abra **Terminal → New Terminal / Novo Terminal**. O terminal deve estar nessa pasta, não dentro de `modulos`.
 
 ## 3. Instalar Pygame e PyOpenGL NO MESMO ambiente Python
 
@@ -82,7 +82,7 @@ Configurações `.vscode/settings.json` e `.vscode/launch.json` já incluídas: 
 | PowerShell impede `Activate.ps1` | **Não precisa ativar**: use os comandos `.\.venv\Scripts\python.exe ...` exatamente como acima. |
 | Falha ao criar contexto OpenGL | Atualize driver gráfico, verifique hardware e execute `python main.py --compat-pygame` **somente para diagnosticar a interface 2D**. Esse modo não substitui a exigência de OpenGL. |
 | Executou `game.py` e deu erro de import relativo | Não execute módulos isolados. Abra a **raiz** e execute **`main.py`**. |
-| Sem som | Confira volume do Windows e dispositivo padrão. Os arquivos usados estão em `assets/sound/` e o gerenciador em `source/modules/audio/audio_manager.py`. |
+| Sem som | Confira volume do Windows e dispositivo padrão. Os arquivos usados estão em `assets/sound/` e o gerenciador em `modulos/audio/audio_manager.py`. |
 
 ## 8. Limites dos testes disponíveis
 

@@ -4,13 +4,13 @@ import sys
 import types
 import importlib
 import pytest
-from source.modules.physics.collision_manager import Vector, CollisionManager
-from source.modules.physics.trajectory_controller import TrajectoryController
-from source.modules.entities.ball import Ball
-from source.modules.entities.actuators import Flipper, Plunger
-from source.modules.entities.obstacles import Bumper, Target
-from source.modules.effects.score import PlayerScore
-from source.modules.constants import GRAVITY, FIXED_DT
+from modulos.physics.collision_manager import Vector, CollisionManager
+from modulos.physics.trajectory_controller import TrajectoryController
+from modulos.entities.ball import Ball
+from modulos.entities.actuators import Flipper, Plunger
+from modulos.entities.obstacles import Bumper, Target
+from modulos.effects.score import PlayerScore
+from constants import GRAVITY, FIXED_DT
 
 
 def test_vector_math():
@@ -130,15 +130,15 @@ class FakeAudio:
 
 @pytest.fixture
 def game(monkeypatch):
-    stage_module=types.ModuleType('source.modules.ui.stage')
+    stage_module=types.ModuleType('modulos.ui.stage')
     stage_module.Stage=lambda root: None
-    monkeypatch.setitem(sys.modules,'source.modules.ui.stage',stage_module)
+    monkeypatch.setitem(sys.modules,'modulos.ui.stage',stage_module)
     # O import dinâmico permite testar o modelo sem exigir placa gráfica.
-    sys.modules.pop('source.modules.game',None)
-    module=importlib.import_module('source.modules.game')
+    sys.modules.pop('game',None)
+    module=importlib.import_module('game')
     obj=module.Game(FakeInput(),FakeAudio(),'.')
     yield obj
-    sys.modules.pop('source.modules.game',None)
+    sys.modules.pop('game',None)
 
 
 def test_game_starts_with_three_balls(game):

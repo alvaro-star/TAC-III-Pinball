@@ -28,6 +28,6 @@ def test_tres_sprite_sheets_originalmente_fornecidas():
 
 
 def test_audio_e_separacao_de_modulos():
-    assert (ROOT/'source/modules/audio/audio_manager.py').is_file()
-    assert (ROOT/'source/modules/ui/sprite_sheet.py').is_file()
+    assert (ROOT/'modulos/audio/audio_manager.py').is_file()
+    assert (ROOT/'modulos/ui/sprite_sheet.py').is_file()
     assert all((ROOT/f'assets/sound/{n}.wav').is_file() for n in ('flipper','launch','bumper','target','bonus','lose','gameover','music'))

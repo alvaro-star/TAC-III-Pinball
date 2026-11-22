@@ -1,4 +1,15 @@
+# Ambiente virtual / dependências
+.venv/
+venv/
 __pycache__/
 .pytest_cache/
 *.pyc
-.venv/
+
+# Logs gerados em execução
+game.log
+storage/
+
+# Artefatos de build (cx_Freeze)
+build/
+dist/
+*.egg-info/

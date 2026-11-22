@@ -1,12 +1,10 @@
 # PINBALL TAC III — PROJETO PYTHON / PYGAME / OPENGL
 
-> **O projeto fica em `backup_prototipo_original/`.** Abra essa pasta no VS Code e execute os comandos a partir dela. Os caminhos citados neste README são relativos a ela.
-
 **Entregar e executar no Visual Studio Code, com Python, Pygame e PyOpenGL.** O arquivo principal é `main.py`; o jogo NÃO é HTML/JavaScript.
 
 ## COMEÇAR (Windows + VS Code)
 
-1. Extraia o ZIP completo e abra a **pasta `Pinball_TACIII_Python/backup_prototipo_original`** no VS Code (`Arquivo → Abrir Pasta`).
+1. Extraia o ZIP completo e abra a **pasta `Pinball_TACIII_Python`** no VS Code (`Arquivo → Abrir Pasta`).
 2. Instale o Python 3.12 e a extensão **Python** no VS Code. Pylance e Python Debugger são opcionais e recomendadas.
 3. No terminal PowerShell do VS Code, execute:
 
@@ -65,10 +63,10 @@ Os testes automatizados do pacote validam lógica e assets; **som, contexto grá
 
 ### Arquitetura de pastas
 
-O pinball segue a arquitetura do protótipo: arquivos de núcleo na raiz de `backup_prototipo_original/` e os demais módulos em `modulos/`.
+O pinball segue a arquitetura do protótipo: arquivos de núcleo na raiz do projeto e os demais módulos em `modulos/`.
 
 ```text
-backup_prototipo_original/
+Pinball_TACIII_Python/
 ├── main.py                 # ponto de entrada
 ├── engine.py               # loop principal
 ├── game.py                 # regras, estados e turnos

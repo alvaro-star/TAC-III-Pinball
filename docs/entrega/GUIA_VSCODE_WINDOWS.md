@@ -15,7 +15,7 @@
 
 1. Extraia o arquivo `.zip` usando **Extrair Tudo** no Windows.
 2. Abra **Visual Studio Code → File / Arquivo → Open Folder / Abrir Pasta**.
-3. Selecione a pasta extraída **`Pinball_TACIII_Python/backup_prototipo_original`** — nela aparecem `main.py`, `requirements.txt`, `source` e `assets`.
+3. Selecione a pasta extraída **`Pinball_TACIII_Python`** — nela aparecem `main.py`, `requirements.txt`, `source` e `assets`.
 4. Confirme o espaço de trabalho, caso o VS Code pergunte se você confia na pasta.
 5. Abra **Terminal → New Terminal / Novo Terminal**. O terminal deve estar nessa pasta, não dentro de `modulos`.
 

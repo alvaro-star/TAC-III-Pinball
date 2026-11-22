@@ -1,7 +1,7 @@
 PINBALL — TAC III | ENTREGA PARA ABRIR NO VS CODE
 
 1. Extraia o ZIP inteiro.
-2. No VS Code, escolha Arquivo > Abrir Pasta e selecione Pinball_TACIII_Python/backup_prototipo_original.
+2. No VS Code, escolha Arquivo > Abrir Pasta e selecione Pinball_TACIII_Python.
 3. No Terminal (PowerShell) da pasta principal, execute:
 
    py -3.12 -m venv .venv

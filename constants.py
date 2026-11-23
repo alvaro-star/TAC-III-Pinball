@@ -12,6 +12,11 @@ LEFT = 105.0
 RIGHT = 615.0
 TOP = 122.0
 BOTTOM = 849.0
+# Teto em semicírculo: tangente às paredes laterais da mesa.
+ARCH_RADIUS = (RIGHT - LEFT) / 2
+ARCH_CENTER_X = (LEFT + RIGHT) / 2
+ARCH_CENTER_Y = TOP + ARCH_RADIUS
+LANE_LEFT = 568.0
 LAUNCH_X = 590.0
 LAUNCH_Y = 783.0
 BALLS_PER_PLAYER = 3

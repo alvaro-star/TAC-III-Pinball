@@ -201,3 +201,55 @@ def test_score_is_separate_per_player(game):
     game.point(100,'bumper')
     assert game.players[0].score==250
     assert game.players[1].score==100
+
+
+def test_teto_circular_mantem_bola_e_deslizamento():
+    from constants import ARCH_CENTER_X, ARCH_CENTER_Y, ARCH_RADIUS
+    ball=Ball(TrajectoryController(CollisionManager()),ARCH_CENTER_X+200,ARCH_CENTER_Y-200,ready=False)
+    ball.velocity=Vector(0,-900)
+    assert CollisionManager.circle_inside_arch(ball,ARCH_CENTER_X,ARCH_CENTER_Y,ARCH_RADIUS)
+    delta=ball.position-Vector(ARCH_CENTER_X,ARCH_CENTER_Y)
+    assert delta.magnitude()==pytest.approx(ARCH_RADIUS-ball.radius)
+    assert ball.velocity.dot(delta.normalized())<0
+    assert ball.velocity.x<-500
+
+
+def test_lancamento_forte_sai_do_canal(game):
+    game.start_game()
+    ball=game.balls[0]
+    game.plunger.charge=1.0
+    game.launch()
+    min_x=ball.position.x
+    for _ in range(360):
+        game.update(FIXED_DT)
+        min_x=min(min_x,ball.position.x)
+    assert min_x<500
+
+
+def test_lancamento_fraco_volta_ao_lancador_sem_perder_vida(game):
+    game.start_game()
+    ball=game.balls[0]
+    ball.ready=False
+    ball.position=Vector(590,700)
+    ball.velocity=Vector(0,300)
+    for _ in range(120):
+        game.update(FIXED_DT)
+    assert game.balls[0].ready
+    assert game.players[0].remaining==3
+
+
+def test_viewport_centraliza_em_janela_larga_e_alta():
+    from display import fit_viewport
+    assert fit_viewport(1440,900)==(360,0,720,900)
+    assert fit_viewport(720,1100)==(0,100,720,900)
+
+
+def test_bola_no_centro_passa_entre_flippers_e_perde_vida(game):
+    game.start_game()
+    ball=game.balls[0]
+    ball.ready=False
+    ball.position=Vector(360,720)
+    ball.velocity=Vector(0,100)
+    for _ in range(240):
+        game.update(FIXED_DT)
+    assert game.players[0].remaining==2

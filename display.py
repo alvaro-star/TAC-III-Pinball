@@ -1,6 +1,13 @@
 """Janela Pygame, renderização em OpenGL por padrão e compatibilidade opcional."""
 import pygame
-from constants import WIDTH, HEIGHT, TITLE, FPS
+from constants import WIDTH, HEIGHT, TITLE, FPS, COLORS
+
+
+def fit_viewport(window_w, window_h):
+    """Maior área com a proporção da mesa, centralizada na janela."""
+    scale = min(window_w/WIDTH, window_h/HEIGHT)
+    w, h = max(1, round(WIDTH*scale)), max(1, round(HEIGHT*scale))
+    return (window_w-w)//2, (window_h-h)//2, w, h
 
 
 class Display:
@@ -16,10 +23,10 @@ class Display:
         # Padrão do trabalho: janela Pygame OPENGL e textura composta em OpenGL.
         if not allow_fallback:
             try:
-                pygame.display.set_mode(self.size,pygame.OPENGL|pygame.DOUBLEBUF)
+                pygame.display.set_mode(self.size,pygame.OPENGL|pygame.DOUBLEBUF|pygame.RESIZABLE)
                 from OpenGL import GL as gl
                 self.gl = gl
-                gl.glViewport(0,0,*self.size)
+                gl.glClearColor(*(c/255 for c in COLORS['bg']),1)
                 gl.glMatrixMode(gl.GL_PROJECTION)
                 gl.glLoadIdentity()
                 gl.glOrtho(0,WIDTH,HEIGHT,0,-1,1)
@@ -40,7 +47,7 @@ class Display:
                     'para testar somente a interface Pygame execute: python main.py --compat-pygame'
                 ) from exc
         if self.backend=='pygame':
-            pygame.display.set_mode(self.size)
+            pygame.display.set_mode(self.size,pygame.RESIZABLE)
         pygame.display.set_caption(TITLE)
         self.surface = pygame.Surface((WIDTH,HEIGHT)).convert_alpha()
         self.last_fps = 0.0
@@ -57,7 +64,10 @@ class Display:
             gl.glBindTexture(gl.GL_TEXTURE_2D,self.texture)
             gl.glTexSubImage2D(gl.GL_TEXTURE_2D,0,0,0,WIDTH,HEIGHT,gl.GL_RGBA,
                                gl.GL_UNSIGNED_BYTE,data)
+            window_w,window_h = pygame.display.get_window_size()
+            gl.glViewport(0,0,window_w,window_h)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            gl.glViewport(*fit_viewport(window_w,window_h))
             gl.glLoadIdentity()
             gl.glColor3f(1,1,1)
             gl.glBegin(gl.GL_QUADS)
@@ -69,8 +79,7 @@ class Display:
             pygame.display.flip()
         else:
             screen=pygame.display.get_surface()
-            if screen.get_size()==(WIDTH,HEIGHT):
-                screen.blit(self.surface,(0,0))
-            else:
-                pygame.transform.scale(self.surface,self.size,screen)
+            x,y,w,h = fit_viewport(*screen.get_size())
+            screen.fill(COLORS['bg'])
+            screen.blit(pygame.transform.smoothscale(self.surface,(w,h)),(x,y))
             pygame.display.flip()

@@ -1,5 +1,6 @@
 """Regras do pinball - estados, jogo para 1-2 pessoas, pontuação e vidas."""
-from constants import LEFT, RIGHT, TOP, BOTTOM, LAUNCH_X, LAUNCH_Y
+from constants import (LEFT, RIGHT, BOTTOM, LAUNCH_X, LAUNCH_Y, LANE_LEFT,
+                       ARCH_CENTER_X, ARCH_CENTER_Y, ARCH_RADIUS)
 from modulos.physics.collision_manager import Vector, CollisionManager
 from modulos.physics.trajectory_controller import TrajectoryController
 from modulos.entities.ball import Ball
@@ -22,26 +23,25 @@ class Game:
         self.trajectory = TrajectoryController(self.cm)
         self.stage = Stage(root)
         self.balls = []
-        self.flippers = [Flipper('left',(267,782)),Flipper('right',(453,782))]
+        self.flippers = [Flipper('left',(240,782)),Flipper('right',(480,782))]
         self.plunger = Plunger()
         self.bumpers = [Bumper(284,342,33,100,'bumper'),
                         Bumper(444,340,33,100,'bumper'),
                         Bumper(363,257,36,100,'bumper'),
                         Bumper(192,507,24,100,'bumper'),
                         Bumper(524,505,24,100,'bumper')]
-        self.targets = [Target(231,215,24,250,'target'),
+        self.targets = [Target(237,222,24,250,'target'),
                         Target(363,196,24,250,'target'),
-                        Target(496,216,24,250,'target')]
+                        Target(483,222,24,250,'target')]
         self.hole = Hole(360,447,24,300,'hole')
         self.banner = ''
         self.banner_time = 0.0
         self.launch_lane_segments = [
-            (Vector(LEFT,TOP),Vector(RIGHT,TOP)),
-            (Vector(LEFT,TOP),Vector(LEFT,678)),
-            (Vector(RIGHT,TOP),Vector(RIGHT,823)),
-            (Vector(LEFT,677),Vector(242,811)),
-            (Vector(574,678),Vector(472,811)),
-            (Vector(568,339),Vector(568,820)),
+            (Vector(LEFT,ARCH_CENTER_Y),Vector(LEFT,678)),
+            (Vector(RIGHT,ARCH_CENTER_Y),Vector(RIGHT,823)),
+            (Vector(LEFT,677),Vector(240,782)),
+            (Vector(LANE_LEFT,683),Vector(480,782)),
+            (Vector(LANE_LEFT,339),Vector(LANE_LEFT,820)),
         ]
         self.slingshots = [(Vector(164,632),Vector(217,700)),
                            (Vector(518,632),Vector(480,700))]
@@ -50,7 +50,7 @@ class Game:
     def start_game(self):
         self.players = [PlayerScore() for _ in range(self.player_count)]
         self.active_player = 0
-        self.flippers = [Flipper('left',(267,782)),Flipper('right',(453,782))]
+        self.flippers = [Flipper('left',(240,782)),Flipper('right',(480,782))]
         self.plunger = Plunger()
         self.banner = 'BOA SORTE!'
         self.banner_time = 1.8
@@ -134,6 +134,12 @@ class Game:
             if ball.ready:
                 continue
             self.collide_world(ball)
+            # Lançamento fraco: a bola volta ao lançador sem custar uma vida.
+            if ball.position.x>LANE_LEFT and ball.position.y>=LAUNCH_Y and ball.velocity.y>0:
+                ball.position=Vector(LAUNCH_X,LAUNCH_Y)
+                ball.velocity=Vector()
+                ball.ready=True
+                continue
             # Evita que uma bola sem velocidade permaneça travada indefinidamente.
             if ball.velocity.magnitude() < 45:
                 ball.seconds_still += dt
@@ -148,6 +154,7 @@ class Game:
             self.lose_last_ball()
 
     def collide_world(self, ball):
+        self.cm.circle_inside_arch(ball,ARCH_CENTER_X,ARCH_CENTER_Y,ARCH_RADIUS)
         for a,b in self.launch_lane_segments:
             self.cm.circle_segment(ball,a,b,0.81)
         # Flippers - colisão cápsula e impulso dependente do movimento angular.

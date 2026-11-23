@@ -59,6 +59,23 @@ class CollisionManager:
         return True
 
     @staticmethod
+    def circle_inside_arch(ball, cx, cy, radius, restitution=0.2):
+        """Mantém a bola sob um teto semicircular, preservando o deslizamento tangencial."""
+        if ball.position.y > cy:
+            return False
+        delta = ball.position - Vector(cx, cy)
+        distance = delta.magnitude()
+        limit = radius - ball.radius
+        if distance <= limit:
+            return False
+        n = delta / distance
+        ball.position = Vector(cx, cy) + n * limit
+        outward = ball.velocity.dot(n)
+        if outward > 0:
+            ball.velocity = ball.velocity - n * ((1.0 + restitution) * outward)
+        return True
+
+    @staticmethod
     def circle_segment(ball, a, b, restitution=0.84, moving=Vector()):
         q = closest_point(ball.position, a, b)
         delta = ball.position - q

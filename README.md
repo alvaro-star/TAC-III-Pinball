@@ -88,6 +88,111 @@ Pinball_TACIII_Python/
 └── exemplos/               # exemplos de aula
 ```
 
+### Resumo de arquivos e módulos
+
+O projeto tem **288 arquivos**, e o pinball funciona com **17 módulos Python**, dos quais 15 estão conectados ao jogo. A versão completa deste resumo está em `docs/resumen_arquitectura.md`.
+
+**Módulos e dependências**
+
+```mermaid
+flowchart TD
+    MAIN["main.py<br/>Ponto de entrada"] --> ENGINE
+
+    subgraph NUCLEO["Núcleo (raiz)"]
+        ENGINE["engine.py<br/>GameEngine: loop principal"]
+        GAME["game.py<br/>Game: regras, estados e turnos"]
+        DISPLAY["display.py<br/>Display: Pygame + OpenGL"]
+        CONST["constants.py<br/>Constantes globais"]
+    end
+
+    subgraph MODULOS["modulos/"]
+        subgraph EVENTS["events/"]
+            COMMANDS["commands.py<br/>InputManager"]
+        end
+        subgraph AUDIO["audio/"]
+            AUDIOM["audio_manager.py<br/>AudioManager"]
+        end
+        subgraph UI["ui/"]
+            STAGE["stage.py<br/>Stage: mesa e HUD"]
+            SPRITE["sprite_sheet.py<br/>SpriteSheet"]
+        end
+        subgraph EFFECTS["effects/"]
+            SCORE["score.py<br/>PlayerScore"]
+        end
+        subgraph ENTITIES["entities/"]
+            BALL["ball.py<br/>Ball"]
+            ACT["actuators.py<br/>Actuator, Flipper, Plunger"]
+            OBS["obstacles.py<br/>Obstacle, Bumper, Target, Hole"]
+        end
+        subgraph PHYSICS["physics/"]
+            TRAJ["trajectory_controller.py<br/>TrajectoryController"]
+            COLL["collision_manager.py<br/>Vector, CollisionManager"]
+        end
+        subgraph CONFIG["config/ (sem uso)"]
+            SETTINGS["settings.py"]
+            THEME["theme.py"]
+        end
+    end
+
+    ENGINE --> DISPLAY
+    ENGINE --> GAME
+    ENGINE --> COMMANDS
+    ENGINE --> AUDIOM
+    GAME --> STAGE
+    GAME --> SCORE
+    GAME --> BALL
+    GAME --> ACT
+    GAME --> OBS
+    GAME --> TRAJ
+    GAME --> COLL
+    STAGE --> SPRITE
+    BALL --> COLL
+    ACT --> COLL
+    OBS --> COLL
+    TRAJ --> COLL
+    THEME -.-> CONST
+```
+
+`constants.py` também é usado por `engine`, `game`, `display`, `stage`, `score`, `ball` e `trajectory_controller`. Essas setas foram omitidas para manter o diagrama legível.
+
+**Organização dos arquivos**
+
+```mermaid
+flowchart LR
+    ROOT["Projeto<br/>288 arquivos"]
+
+    ROOT --> CODE["Código do pinball"]
+    CODE --> C1["Núcleo: 5 arquivos"]
+    CODE --> C2["modulos/: 12 módulos ativos"]
+    CODE --> C3["tests/: 2 arquivos, 28 testes"]
+
+    ROOT --> RES["Recursos"]
+    RES --> R1["assets/pinball: 16<br/>Sprites e atlas"]
+    RES --> R2["assets/sound: 8<br/>Efeitos e música"]
+    RES --> R3["assets/image: 61<br/>Herdado, só back.jpg é usado"]
+
+    ROOT --> DOC["Documentação"]
+    DOC --> D1["docs/: 20<br/>Inclui 6 de entrega"]
+    DOC --> D2["README.md e ENTREGA_LEIA_PRIMEIRO.txt"]
+
+    ROOT --> SETUP["Execução e ambiente"]
+    SETUP --> S1["requirements.txt"]
+    SETUP --> S2["VERIFICAR_AMBIENTE.py"]
+    SETUP --> S3["INICIAR_JOGO_WINDOWS.bat"]
+    SETUP --> S4[".vscode/ e conftest.py"]
+
+    ROOT --> OLD["Legado, fora do pinball"]
+    OLD --> O1["exemplos/: 116"]
+    OLD --> O2["diagramas/: 13"]
+    OLD --> O3["data/: 3, locale/: 1, logs/: 1"]
+    OLD --> O4["12 módulos do protótipo<br/>player, panel, utils, tiles, level1..."]
+```
+
+**Pontos a limpar**
+
+- `modulos/config/` não está conectado: nenhum módulo ativo importa `settings.py` ou `theme.py`.
+- O código legado importa caminhos que não existem mais, como `modulos.constants` e `modulos.game`. O pinball não o utiliza.
+
 ### Materiais legados
 
-Não fazem parte do pinball: `exemplos/`, `diagramas/`, `data/`, `player.py`, `panel.py`, `utils.py`, `requirements_original_utf16.txt`, `modulos/editor.py`, `modulos/utils.py`, `modulos/entities/player.py`, `modulos/entities/tiles.py`, `modulos/events/actions.py`, `modulos/events/io.py`, `modulos/ui/background.py`, `modulos/ui/level1.py` e `modulos/ui/panel.py`. As versões originais de `main.py`, `engine.py`, `game.py`, `display.py` e `constants.py` do protótipo continuam no histórico do Git, no commit "Registrar protótipo original antes da migração".
+Não fazem parte do pinball: `exemplos/`, `diagramas/`, `data/`, `player.py`, `panel.py`, `utils.py`, `requirements_original_utf16.txt`, `modulos/editor.py`, `modulos/utils.py`, `modulos/entities/player.py`, `modulos/entities/tiles.py`, `modulos/events/actions.py`, `modulos/events/io.py`, `modulos/ui/background.py`, `modulos/ui/level1.py` e `modulos/ui/panel.py`. As versões originais de `main.py`, `engine.py`, `game.py`, `display.py` e `constants.py` do protótipo continuam na branch `alvaro-star/migracao-arquitetura`, no commit "Registrar protótipo original antes da migração".

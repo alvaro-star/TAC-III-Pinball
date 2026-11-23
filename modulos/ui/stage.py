@@ -4,7 +4,8 @@ import random
 from pathlib import Path
 import pygame
 from .sprite_sheet import SpriteSheet
-from constants import WIDTH, HEIGHT, LEFT, RIGHT, TOP, BOTTOM, COLORS
+from constants import (WIDTH, HEIGHT, LEFT, RIGHT, TOP, BOTTOM, COLORS,
+                       ARCH_CENTER_X, ARCH_CENTER_Y, ARCH_RADIUS)
 
 
 class Stage:
@@ -40,6 +41,16 @@ class Stage:
             box.topleft = (int(x),int(y))
         surface.blit(img,box)
 
+    @staticmethod
+    def _fill_table(surface, color, grow=0):
+        """Preenche a silhueta da mesa: semicírculo no topo e base retangular."""
+        cx,cy = int(ARCH_CENTER_X),int(ARCH_CENTER_Y)
+        radius = int(ARCH_RADIUS)+grow
+        pygame.draw.circle(surface,color,(cx,cy),radius,draw_top_left=True,draw_top_right=True)
+        bottom = int(BOTTOM)+min(grow,13)
+        pygame.draw.rect(surface,color,(cx-radius,cy-1,2*radius,bottom-cy+1),
+                         border_bottom_left_radius=20+grow,border_bottom_right_radius=20+grow)
+
     def _create_background(self):
         s = pygame.Surface((WIDTH,HEIGHT))
         s.fill(COLORS['bg'])
@@ -49,22 +60,28 @@ class Stage:
             bg = pygame.transform.scale(bg,(WIDTH,HEIGHT))
             bg.set_alpha(110)
             s.blit(bg,(0,0))
-        pygame.draw.rect(s,(12,31,61),(LEFT-17,TOP-18,RIGHT-LEFT+34,BOTTOM-TOP+31),border_radius=25)
-        pygame.draw.rect(s,(36,114,200),(LEFT-10,TOP-10,RIGHT-LEFT+20,BOTTOM-TOP+20),width=5,border_radius=23)
-        pygame.draw.rect(s,(7,17,37),(LEFT,TOP,RIGHT-LEFT,BOTTOM-TOP),border_radius=20)
+        for grow,color in ((17,(12,31,61)),(10,(36,114,200)),(5,(12,31,61)),(0,(7,17,37))):
+            self._fill_table(s,color,grow)
         # Fundo quadriculado da estética arcade / pixel art.
+        grid = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
         for y in range(int(TOP)+4,int(BOTTOM),26):
             for x in range(int(LEFT)+3,int(RIGHT)-2,26):
                 tone = 13 if ((x//26+y//26)%2==0) else 17
-                pygame.draw.rect(s,(tone,tone+16,tone+30),(x,y,25,25))
+                pygame.draw.rect(grid,(tone,tone+16,tone+30,255),(x,y,25,25))
+        mask = pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
+        self._fill_table(mask,(255,255,255,255))
+        grid.blit(mask,(0,0),special_flags=pygame.BLEND_RGBA_MIN)
+        s.blit(grid,(0,0))
         # Reflexo colorido nos limites da mesa e trilha de lançamento.
-        pygame.draw.line(s,COLORS['cyan'],(LEFT+2,TOP+36),(LEFT+2,688),3)
-        pygame.draw.line(s,COLORS['cyan'],(RIGHT-3,TOP+36),(RIGHT-3,822),3)
+        pygame.draw.circle(s,COLORS['cyan'],(int(ARCH_CENTER_X),int(ARCH_CENTER_Y)),int(ARCH_RADIUS)-1,3,
+                           draw_top_left=True,draw_top_right=True)
+        pygame.draw.line(s,COLORS['cyan'],(LEFT+2,ARCH_CENTER_Y),(LEFT+2,688),3)
+        pygame.draw.line(s,COLORS['cyan'],(RIGHT-2,ARCH_CENTER_Y),(RIGHT-2,822),3)
         pygame.draw.line(s,(66,118,183),(568,341),(568,819),5)
         pygame.draw.line(s,(13,54,91),(582,342),(582,820),3)
-        pygame.draw.arc(s,(68,138,204),(LEFT+27,TOP+16,433,192),math.pi*1.02,math.pi*1.97,4)
-        pygame.draw.line(s,(45,120,208),(LEFT,682),(245,806),7)
-        pygame.draw.line(s,(45,120,208),(560,682),(456,806),7)
+        pygame.draw.arc(s,(68,138,204),(170,TOP+16,380,192),math.pi*1.02,math.pi*1.97,4)
+        pygame.draw.line(s,(45,120,208),(LEFT,677),(240,782),7)
+        pygame.draw.line(s,(45,120,208),(568,683),(480,782),7)
         # Barreira lateral em ziguezague (slingshots).
         pygame.draw.lines(s,(255,169,54),False,[(158,619),(222,701),(194,681)],6)
         pygame.draw.lines(s,(255,169,54),False,[(514,619),(475,701),(496,681)],6)
@@ -78,7 +95,9 @@ class Stage:
         rng = random.Random(83)
         for _ in range(70):
             x=rng.randint(15,WIDTH-15);y=rng.randint(112,HEIGHT-18)
-            if not (LEFT-20 < x < RIGHT+20 and TOP-20 < y < BOTTOM+22):
+            inside = LEFT-20 < x < RIGHT+20 and y < BOTTOM+22 and (
+                y >= ARCH_CENTER_Y or math.hypot(x-ARCH_CENTER_X,y-ARCH_CENTER_Y) < ARCH_RADIUS+20)
+            if not inside:
                 pygame.draw.circle(s,(130,177,217),(x,y),rng.choice([1,1,1,2]))
         return s
 
@@ -157,10 +176,10 @@ class Stage:
             labels=[]
             if bonus.multiplier_time:
                 labels.append(f'2X {bonus.multiplier_time:.0f}s')
-                self.sprite(s, 'icon_2x', 223, 138, 40)
+                self.sprite(s, 'icon_2x', 262, 164, 30)
             if len(game.balls)>1:labels.append('MULTIBALL')
             if labels:
-                self.text(s,'  |  '.join(labels),352,127,15,COLORS['gold'],center=True)
+                self.text(s,'  |  '.join(labels),372,146,15,COLORS['gold'],center=True)
         if game.banner_time>0:
             self.text(s,game.banner,359,541,24,COLORS['gold'],center=True,title=True)
         self.text(s,'SOM: '+('DESLIGADO' if game.audio.muted else 'LIGADO')+' [M]',526,884,12,COLORS['muted'])

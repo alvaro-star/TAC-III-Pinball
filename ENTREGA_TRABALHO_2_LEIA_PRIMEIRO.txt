@@ -1,0 +1,48 @@
+TAC III — PINBALL — TRABALHO 2
+==============================================
+
+1) ABRIR NO VS CODE
+   Abra a pasta TAC-III-Pinball-main (que contém main.py).
+   Instale Python 3.11 ou 3.12 e a extensão Python do VS Code.
+   Execute no terminal PowerShell:
+
+     py -3.12 -m venv .venv
+     .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+     .\.venv\Scripts\python.exe main.py
+
+   Alternativa: INICIAR_JOGO_WINDOWS.bat
+
+2) NOVOS MENUS
+   Novo jogo / Editor de fases / Configuracoes / Multiplayer LAN / Sair
+   Use setas e Enter, ou clique com o mouse.
+
+3) EDITOR
+   B/T/H = inserir bumper/alvo/bonus
+   V + clique/arraste = selecionar e mover
+   N = nova fase; F2 = nome; Ctrl+S = salvar JSON; L = carregar;
+   Delete/botao direito = remover; Ctrl+Z = desfazer; F5 = testar.
+   Fases salvas em data/levels/.
+
+4) MULTIPLAYER LAN
+   PC A: Multiplayer LAN > Hospedar.
+   PC B: Multiplayer LAN > Conectar e digitar o IPv4 do PC A.
+   Porta TCP 50505; se necessario permitir no Firewall do Windows
+   somente para redes privadas. 2 jogadores com turnos alternados.
+   Nao exponha a porta a Internet (rede LAN sem autenticacao).
+
+5) DOCUMENTACAO
+   docs/entrega/GDD_ATUALIZADO_TRABALHO_2.docx
+   docs/entrega/RELATORIO_TECNICO_IMPLEMENTACAO_T2.docx
+   docs/trabalho2/GUIA_DE_EXECUCAO_E_APRESENTACAO.md
+   docs/trabalho2/RELATORIO_DE_IMPLEMENTACAO.md
+   diagramas/trabalho2/*.png e *.dot
+
+6) TESTES
+   python -m pip install pytest
+   python -m pytest -q tests
+
+   44 testes automatizados aprovados nesta entrega.
+   PENDENTE: teste grafico e sonoro em Windows, FPS >=30
+   e LAN entre dois computadores fisicos.
+
+PONTO DE ENTRADA: main.py.  MANTEM: Python/Pygame/OpenGL.

@@ -1,0 +1,95 @@
+"""Janela Pygame, renderização em OpenGL por padrão e compatibilidade opcional."""
+try:
+    import pygame
+except ImportError:  # somente utilitários geométricos em testes sem driver
+    pygame=None
+from constants import WIDTH, HEIGHT, TITLE, FPS, COLORS
+
+
+def fit_viewport(window_w, window_h):
+    """Maior área com a proporção da mesa, centralizada na janela."""
+    scale = min(window_w/WIDTH, window_h/HEIGHT)
+    w, h = max(1, round(WIDTH*scale)), max(1, round(HEIGHT*scale))
+    return (window_w-w)//2, (window_h-h)//2, w, h
+
+
+class Display:
+    def __init__(self, allow_fallback=False):
+        info = pygame.display.Info()
+        desired_height = min(820,max(550,info.current_h-95)) if info.current_h>0 else 740
+        self.size = (int(WIDTH*desired_height/HEIGHT),desired_height)
+        self.clock = pygame.time.Clock()
+        self.backend = 'pygame'
+        self.surface = None
+        self.texture = None
+        self.gl = None
+        # Padrão do trabalho: janela Pygame OPENGL e textura composta em OpenGL.
+        if not allow_fallback:
+            try:
+                pygame.display.set_mode(self.size,pygame.OPENGL|pygame.DOUBLEBUF|pygame.RESIZABLE)
+                from OpenGL import GL as gl
+                self.gl = gl
+                gl.glClearColor(*(c/255 for c in COLORS['bg']),1)
+                gl.glMatrixMode(gl.GL_PROJECTION)
+                gl.glLoadIdentity()
+                gl.glOrtho(0,WIDTH,HEIGHT,0,-1,1)
+                gl.glMatrixMode(gl.GL_MODELVIEW)
+                gl.glLoadIdentity()
+                gl.glEnable(gl.GL_TEXTURE_2D)
+                self.texture = gl.glGenTextures(1)
+                gl.glBindTexture(gl.GL_TEXTURE_2D,self.texture)
+                gl.glTexParameteri(gl.GL_TEXTURE_2D,gl.GL_TEXTURE_MIN_FILTER,gl.GL_LINEAR)
+                gl.glTexParameteri(gl.GL_TEXTURE_2D,gl.GL_TEXTURE_MAG_FILTER,gl.GL_LINEAR)
+                gl.glTexImage2D(gl.GL_TEXTURE_2D,0,gl.GL_RGBA,WIDTH,HEIGHT,0,gl.GL_RGBA,
+                                gl.GL_UNSIGNED_BYTE,None)
+                self.backend='opengl'
+            except Exception as exc:
+                pygame.display.quit()
+                raise RuntimeError(
+                    'Falha ao inicializar OpenGL. Verifique PyOpenGL e o driver de vídeo; '
+                    'para testar somente a interface Pygame execute: python main.py --compat-pygame'
+                ) from exc
+        if self.backend=='pygame':
+            pygame.display.set_mode(self.size,pygame.RESIZABLE)
+        pygame.display.set_caption(TITLE)
+        self.surface = pygame.Surface((WIDTH,HEIGHT)).convert_alpha()
+        self.last_fps = 0.0
+
+    def screen_to_world(self,x,y):
+        """Mapeia cliques da janela redimensionada às coordenadas lógicas 720x900."""
+        win_w,win_h=pygame.display.get_window_size()
+        vx,vy,vw,vh=fit_viewport(win_w,win_h)
+        if not vx<=x<vx+vw or not vy<=y<vy+vh:return None
+        return ((x-vx)*WIDTH/vw,(y-vy)*HEIGHT/vh)
+
+    def tick(self):
+        dt = self.clock.tick(FPS)/1000.0
+        self.last_fps = self.clock.get_fps()
+        return min(dt,0.05)
+
+    def present(self):
+        if self.backend == 'opengl':
+            gl = self.gl
+            data = pygame.image.tostring(self.surface,'RGBA',True)
+            gl.glBindTexture(gl.GL_TEXTURE_2D,self.texture)
+            gl.glTexSubImage2D(gl.GL_TEXTURE_2D,0,0,0,WIDTH,HEIGHT,gl.GL_RGBA,
+                               gl.GL_UNSIGNED_BYTE,data)
+            window_w,window_h = pygame.display.get_window_size()
+            gl.glViewport(0,0,window_w,window_h)
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            gl.glViewport(*fit_viewport(window_w,window_h))
+            gl.glLoadIdentity()
+            gl.glColor3f(1,1,1)
+            gl.glBegin(gl.GL_QUADS)
+            gl.glTexCoord2f(0,1);gl.glVertex2f(0,0)
+            gl.glTexCoord2f(1,1);gl.glVertex2f(WIDTH,0)
+            gl.glTexCoord2f(1,0);gl.glVertex2f(WIDTH,HEIGHT)
+            gl.glTexCoord2f(0,0);gl.glVertex2f(0,HEIGHT)
+            gl.glEnd()
+            pygame.display.flip()
+        else:
+            screen=pygame.display.get_surface()
+            x,y,w,h = fit_viewport(*screen.get_size())
+            screen.fill(COLORS['bg'])
+            screen.blit(pygame.transform.smoothscale(self.surface,(w,h)),(x,y))
+            pygame.display.flip()

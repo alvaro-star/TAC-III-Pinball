@@ -4,6 +4,7 @@ from modulos.config.settings import ITEMS
 MAIN_ITEMS = [
     ('novo', 'NOVO JOGO'),
     ('multi', 'MULTIPLAYER'),
+    ('lan', 'MULTIPLAYER LAN'),
     ('fases', 'EDITOR DE FASES'),
     ('jogador', 'MUDAR DE JOGADOR'),
     ('score', 'SCORE'),
@@ -28,12 +29,26 @@ EDIT_ITEMS = [
     ('descartar', 'SAIR SEM SALVAR'),
 ]
 
+# Multiplayer em rede local.
+LAN_ITEMS = [
+    ('hospedar', 'HOSPEDAR PARTIDA'),
+    ('conectar', 'CONECTAR A UM IP'),
+    ('voltar', 'VOLTAR'),
+]
+
+# Menu aberto com P/Esc durante a partida em rede (a partida não para).
+LAN_PAUSE_ITEMS = [
+    ('continuar', 'CONTINUAR'),
+    ('sair', 'SAIR DA PARTIDA'),
+]
+
 # Telas fora da partida (sem placar no HUD).
 MENU_STATES = ('menu', 'scores', 'settings', 'levels', 'players',
-               'editing', 'editor_menu', 'text_input')
+               'editing', 'editor_menu', 'text_input', 'lan_menu', 'lan_lobby')
 # Telas navegadas com setas/Enter/Esc. 'editing' (mouse) e 'text_input' (digitação)
 # têm tratamento próprio em InputManager.
-NAV_STATES = ('menu', 'scores', 'settings', 'levels', 'players', 'editor_menu', 'paused')
+NAV_STATES = ('menu', 'scores', 'settings', 'levels', 'players', 'editor_menu', 'paused',
+              'lan_menu', 'lan_lobby', 'lan_pause')
 
 # Última linha da tela de configurações: volta ao menu.
 SETTINGS_BACK = len(ITEMS)
@@ -47,6 +62,8 @@ class Menu:
         self.levels_index = 0
         self.players_index = 0
         self.edit_index = 0
+        self.lan_index = 0
+        self.lan_pause_index = 0
 
     def move(self, screen, step, count=None):
         """count: tamanho das listas dinâmicas (fases e jogadores)."""
@@ -58,6 +75,10 @@ class Menu:
             self.pause_index = (self.pause_index + step) % len(PAUSE_ITEMS)
         elif screen == 'editor_menu':
             self.edit_index = (self.edit_index + step) % len(EDIT_ITEMS)
+        elif screen == 'lan_menu':
+            self.lan_index = (self.lan_index + step) % len(LAN_ITEMS)
+        elif screen == 'lan_pause':
+            self.lan_pause_index = (self.lan_pause_index + step) % len(LAN_PAUSE_ITEMS)
         elif screen == 'levels' and count:
             self.levels_index = (self.levels_index + step) % count
         elif screen == 'players' and count:
@@ -68,6 +89,12 @@ class Menu:
 
     def pause_choice(self):
         return PAUSE_ITEMS[self.pause_index][0]
+
+    def lan_choice(self):
+        return LAN_ITEMS[self.lan_index][0]
+
+    def lan_pause_choice(self):
+        return LAN_PAUSE_ITEMS[self.lan_pause_index][0]
 
     def edit_choice(self):
         return EDIT_ITEMS[self.edit_index][0]

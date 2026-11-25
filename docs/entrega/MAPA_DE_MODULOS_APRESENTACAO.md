@@ -22,6 +22,7 @@
 | Menu inicial e de pausa | `modulos/ui/menu.py` + `modulos/core/game.py` (`menu_action`) | Inicial: Novo jogo, Multiplayer, Editor de fases, Mudar de jogador, Score, Configurações e Sair. Pausa: Continuar, Reiniciar, Configurações, Menu principal e Sair. Desenho em `Stage.menu_card`. |
 | Configurações | `modulos/config/settings.py` | Som, volumes, velocidade de queda, bolas por jogador e FPS; salvas em `storage/settings.json`. |
 | Score | `modulos/effects/highscores.py` | 10 melhores pontuações (nome do jogador e fase), gravadas no Game Over em `storage/scores.json`. |
+| Multiplayer LAN | `modulos/network/protocol.py`, `modulos/network/lan.py` + `Game.host_lan/join_lan/poll_lan/apply_snapshot` | Cliente-servidor TCP na porta 50505, mensagens JSON por linha. O anfitrião roda `LANServer` (um `Game` sem desenho, `headless=True`) e os dois PCs rodam `LANClient`; só as teclas do jogador da vez são aplicadas e o servidor envia snapshots a 60 Hz. Arquitetura baseada na proposta do Trabalho II (PR #3). |
 | Jogadores | `modulos/effects/players.py` | Jogadores cadastrados e jogador ativo em `storage/players.json`. |
 | Fases | `modulos/core/levels.py` | Catálogo de peças (`PIECES`), formato JSON da fase, fase padrão `data/fases/padrao.json` (recriada por `create_default_level` se faltar), regras de posicionamento e `LevelStore` para `storage/fases/`. |
 | Editor de fases | `modulos/core/level_editor.py` + `Stage.draw_editor` | Peça escolhida, paleta, colocar/remover/desfazer; desenho da paleta e da prévia sob o mouse. |

@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>GDD — Pinball TAC III — Trabalho 2</title>
+<link rel="stylesheet" href="abnt.css">
+</head>
+<body>
+<header class="cabecalho">
+  <div class="titulo">GDD — Pinball TAC III: atualização implementada no Trabalho 2</div>
+  <div class="autores">Alvaro Vargas e Ethan Abner</div>
+</header>
+
+<section class="secao continua">
+<h1 id="s1">1 INTRODUÇÃO</h1>
+<p>Este documento atualiza o GDD do Pinball TAC III com o que foi efetivamente implementado no
+Trabalho 2. O GDD entregue no Trabalho 1 (<code>docs/entrega/GDD_original.docx</code>) continua
+válido como registro histórico das regras e da proposta inicial; as seções a seguir, os diagramas e
+os requisitos incrementais descrevem a versão atual do código e substituem, para fins de
+apresentação, os diagramas do Trabalho 1.</p>
+<p>O código-fonte e o histórico de desenvolvimento estão no repositório público
+<code>https://github.com/alvaro-star/TAC-III-Pinball.git</code>. Os sprites e efeitos sonoros
+foram obtidos de fontes públicas e estão reunidos na pasta
+<code>https://drive.google.com/drive/folders/1XCPrGo6UpRIycwQnuBqF42GzMXA1hl-O</code>.</p>
+<p>O jogo é escrito em Python 3.12 (compatível com 3.11), com Pygame 2.6 e PyOpenGL 3.1. A mesa é
+desenhada em uma superfície lógica de 720 × 900 pixels do Pygame e enviada ao OpenGL como textura,
+no pipeline fixo, sem shaders GLSL próprios. A janela é redimensionável: a mesa mantém a proporção
+e as faixas laterais recebem o fundo de galáxia repetido em espelho. A física roda em passo fixo de
+120 Hz, com subpassos por bola, e a renderização visa 60 quadros por segundo. Os textos usam as
+fontes livres Exo 2 e Orbitron, incluídas no projeto.</p>
+</section>
+
+<section class="secao continua">
+<h1 id="s2">2 SÍNTESE DAS ENTREGAS</h1>
+<p>O Quadro 1 resume as funcionalidades entregues e a situação de cada uma na versão atual.</p>
+<p class="legenda">Quadro 1 – Síntese das entregas do Trabalho 2</p>
+<table>
+<thead><tr><th style="width:28%">Funcionalidade</th><th>Situação na versão entregue</th></tr></thead>
+<tr><td>Editor de fases</td><td>Implementado: lista de fases, paleta com 9 peças, posicionamento com o mouse validado, remoção, desfazer, salvar, escolher a fase e jogar.</td></tr>
+<tr><td>Multiplayer local</td><td>Implementado: 2 jogadores no mesmo computador, em turnos alternados.</td></tr>
+<tr><td>Multiplayer em LAN</td><td>Implementado: servidor TCP autoritativo, 2 computadores, turnos com controles isolados e snapshots a 60 por segundo.</td></tr>
+<tr><td>Jogadores e score</td><td>Implementado: cadastro por nome, troca do jogador ativo e tabela com as 10 melhores pontuações, com nome e fase.</td></tr>
+<tr><td>Menus</td><td>Implementados: principal, pausa, configurações, fases, editor, jogadores, score, LAN e game over.</td></tr>
+<tr><td>Configurações</td><td>Implementadas e salvas: som, volumes, velocidade de queda, bolas por jogador e exibição de FPS.</td></tr>
+<tr><td>Física</td><td>Corrigida: subpassos impedem que a bola atravesse paredes; o golpe forte do flipper só ocorre na subida, o que permite segurar a bola.</td></tr>
+<tr><td>Diagramas</td><td>Atualizados: módulos, classes, navegação, fluxo do editor e comunicação em rede.</td></tr>
+<tr><td>Verificação</td><td>Execução gráfica conferida em Linux com OpenGL; validação em Windows e da rede entre 2 computadores físicos pendente.</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+</section>
+
+<section class="secao continua">
+<h1 id="s3">3 EDITOR DE FASES</h1>
+<p>A opção Editor de fases do menu principal abre a lista de fases: a fase PADRÃO e as fases
+criadas pelos jogadores. Enquanto o cursor percorre a lista, a mesa ao fundo mostra a fase
+selecionada. A fase escolhida com Enter passa a ser a fase ativa, usada por Novo jogo, Multiplayer e
+pelo anfitrião de uma partida em LAN. O editor usa a própria mesa como área de trabalho, com uma
+paleta à esquerda que lista todas as peças com os sprites do atlas.</p>
+
+<h2 id="s3-1">3.1 LISTA DE FASES E CONTROLES</h2>
+<p class="legenda">Quadro 2 – Controles da lista de fases e do editor</p>
+<table>
+<thead><tr><th style="width:28%">Operação</th><th>Controles</th></tr></thead>
+<tr><td>Escolher a fase ativa</td><td>Enter na lista de fases.</td></tr>
+<tr><td>Jogar a fase</td><td>J na lista, ou Salvar e jogar no menu do editor.</td></tr>
+<tr><td>Criar fase</td><td>N, ou a linha + NOVA FASE; pede o nome (até 16 caracteres).</td></tr>
+<tr><td>Editar fase</td><td>E. Na fase PADRÃO, que é somente leitura, cria uma cópia com outro nome.</td></tr>
+<tr><td>Apagar fase</td><td>Delete ou X, pressionado duas vezes para confirmar.</td></tr>
+<tr><td>Escolher a peça</td><td>Teclas 1 a 9, roda do mouse, Tab, Q/E ou clique na paleta.</td></tr>
+<tr><td>Posicionar</td><td>Clique esquerdo. A prévia sob o mouse mostra um anel verde onde a peça cabe e vermelho onde não cabe.</td></tr>
+<tr><td>Remover</td><td>Clique direito sobre a peça.</td></tr>
+<tr><td>Desfazer</td><td>Z (desfaz inclusões, remoções e a limpeza da mesa).</td></tr>
+<tr><td>Menu do editor</td><td>Esc: Continuar editando, Salvar e sair, Salvar e jogar, Limpar mesa e Sair sem salvar.</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+
+<h2 id="s3-2">3.2 PEÇAS DISPONÍVEIS</h2>
+<p>O catálogo <code>PIECES</code>, em <code>modulos/core/levels.py</code>, define as peças que
+podem ser posicionadas (Quadro 3). Paredes, flippers, slingshots e o canal de lançamento são fixos.</p>
+<p class="legenda">Quadro 3 – Peças do editor de fases</p>
+<table>
+<thead><tr><th>Tecla</th><th>Peça</th><th>Tipo</th><th>Raio (px)</th><th>Pontos</th><th>Sprite</th></tr></thead>
+<tr><td>1</td><td>Bumper azul</td><td>Bumper</td><td>33</td><td>100</td><td>bumper_blue</td></tr>
+<tr><td>2</td><td>Bumper dourado</td><td>Bumper</td><td>33</td><td>100</td><td>bumper_gold</td></tr>
+<tr><td>3</td><td>Bumper rosa grande</td><td>Bumper</td><td>36</td><td>100</td><td>bumper_pink</td></tr>
+<tr><td>4</td><td>Bumper vermelho</td><td>Bumper</td><td>24</td><td>100</td><td>bumper_red</td></tr>
+<tr><td>5</td><td>Bumper azul pequeno</td><td>Bumper</td><td>24</td><td>100</td><td>bumper_blue</td></tr>
+<tr><td>6</td><td>Alvo 10</td><td>Target</td><td>24</td><td>250</td><td>target10</td></tr>
+<tr><td>7</td><td>Alvo 25</td><td>Target</td><td>24</td><td>250</td><td>target25</td></tr>
+<tr><td>8</td><td>Alvo 50</td><td>Target</td><td>24</td><td>250</td><td>target50</td></tr>
+<tr><td>9</td><td>Buraco bônus</td><td>Hole</td><td>24</td><td>300</td><td>desenho próprio</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+
+<h2 id="s3-3">3.3 FORMATO DO ARQUIVO E PERSISTÊNCIA</h2>
+<p>As fases são arquivos JSON no mesmo formato de mapa usado pelo protótipo que originou o projeto
+(<code>data/level1.json</code>, gerado por <code>Level1.create_first_map</code>): as chaves
+<code>height</code>, <code>width</code>, <code>layers</code>, <code>name</code>, <code>type</code>
+(<code>"pinball"</code>) e <code>version</code>, com uma camada <code>Obstáculos</code> cuja lista
+<code>objects</code> guarda cada peça como <code>{piece, x, y}</code>, por exemplo:</p>
+<pre>{"layers": [{"name": "Obstáculos",
+             "objects": [{"piece": "bumper_azul", "x": 284, "y": 342}, ...]}],
+ "name": "PADRÃO", "type": "pinball", "version": "1.0", "width": 720, "height": 900}</pre>
+<p>A fase padrão fica em <code>data/fases/padrao.json</code>, é somente leitura e é recriada por
+<code>create_default_level()</code> se o arquivo faltar. As fases do editor são gravadas em
+<code>storage/fases/</code>; o nome do arquivo é derivado do nome da fase, reduzido a letras
+minúsculas, dígitos e sublinhado, o que impede caminhos inseguros, e recebe um sufixo numérico se já
+existir. Na leitura, peças desconhecidas ou com coordenadas não numéricas são descartadas e arquivos
+inválidos são ignorados com aviso. O JSON é tratado apenas como dados; nenhum código é carregado.</p>
+
+<h2 id="s3-4">3.4 REGRAS DE POSICIONAMENTO</h2>
+<p>A função <code>can_place()</code> só aceita uma peça de raio r na posição (x, y) quando:</p>
+<ul>
+<li>x − r ≥ 109 e x + r ≤ 564, ou seja, dentro da mesa e fora do canal de lançamento;</li>
+<li>y − r ≥ 126 e y + r ≤ 600, acima dos slingshots e dos flippers;</li>
+<li>a peça fica inteira dentro do teto em arco;</li>
+<li>há pelo menos 4 pixels entre ela e as demais peças.</li>
+</ul>
+<p>Não há limite fixo de peças nem de buracos: o limite é o espaço livre da mesa.</p>
+</section>
+
+<section class="secao continua">
+<h1 id="s4">4 MULTIPLAYER</h1>
+<h2 id="s4-1">4.1 MULTIPLAYER LOCAL</h2>
+<p>Dois jogadores usam o mesmo computador e alternam a cada bola perdida. O jogador 1 é o jogador
+ativo e o jogador 2 é o próximo jogador cadastrado.</p>
+
+<h2 id="s4-2">4.2 MULTIPLAYER EM LAN</h2>
+<p>A arquitetura cliente-servidor segue o desenho proposto pela equipe para o Trabalho 2. O
+computador anfitrião abre um servidor TCP IPv4 na porta 50505 (<code>LANServer</code>), executado
+em uma thread com <code>selectors</code>, e conecta a ele o seu próprio cliente
+(<code>LANClient</code>) pelo endereço 127.0.0.1, como jogador 1. O convidado digita o IPv4 do
+anfitrião e entra como jogador 2. Cada cliente envia o nome do jogador cadastrado e a partida começa
+sozinha quando os dois estão na sala, com a fase escolhida, as bolas por jogador e a velocidade de
+queda do anfitrião.</p>
+<p>O modelo é autoritativo: apenas o servidor executa a física, em uma instância de
+<code>Game</code> sem desenho, a 120 Hz, e decide colisões, pontos, vidas e turnos. Os clientes
+enviam só o estado das teclas e o comando de lançar; o servidor aplica apenas os do jogador da vez.
+Cerca de 60 vezes por segundo o servidor envia um snapshot com estado, placar, bolas, flippers,
+lançador, mensagens, acendimentos das peças e os sons ocorridos, de modo que os dois computadores
+mostram e tocam o mesmo. No cliente, <code>Game.remote_mode</code> desliga a simulação local.</p>
+
+<h2 id="s4-3">4.3 PROTOCOLO</h2>
+<p>As mensagens são objetos JSON em UTF-8, uma por linha, com no máximo 64 KiB (Quadro 4). Linhas
+inválidas são ignoradas; uma mensagem maior que o limite encerra a conexão.</p>
+<p class="legenda">Quadro 4 – Mensagens do protocolo LAN</p>
+<table>
+<thead><tr><th style="width:18%">Mensagem</th><th style="width:22%">Sentido</th><th>Conteúdo</th></tr></thead>
+<tr><td>hello</td><td>cliente → servidor</td><td>Nome do jogador cadastrado.</td></tr>
+<tr><td>input</td><td>cliente → servidor</td><td>Teclas seguradas: flipper esquerdo, direito e lançador.</td></tr>
+<tr><td>launch</td><td>cliente → servidor</td><td>Soltou o Espaço (lançar a bola).</td></tr>
+<tr><td>welcome</td><td>servidor → cliente</td><td>Número do jogador (0 = J1, 1 = J2).</td></tr>
+<tr><td>lobby</td><td>servidor → clientes</td><td>Jogadores na sala.</td></tr>
+<tr><td>start</td><td>servidor → clientes</td><td>Nomes e peças da fase do anfitrião.</td></tr>
+<tr><td>snapshot</td><td>servidor → clientes</td><td>Estado visual da partida e sons.</td></tr>
+<tr><td>error</td><td>servidor → cliente</td><td>Ex.: SALA CHEIA para um terceiro computador.</td></tr>
+<tr><td>disconnected</td><td>servidor → cliente</td><td>O outro jogador saiu da partida.</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+
+<h2 id="s4-4">4.4 REGRAS E FALHAS</h2>
+<ul>
+<li>Os jogadores atuam em turnos alternados; não é um modo simultâneo com duas bolas.</li>
+<li>P ou Esc abre um menu local (Continuar ou Sair da partida) sem pausar o servidor; R não reinicia a partida em rede.</li>
+<li>Se um jogador sai, a partida é encerrada e o outro volta ao menu LAN com o aviso &lt;NOME&gt; SAIU DA PARTIDA; um terceiro computador recebe SALA CHEIA.</li>
+<li>Ao final, cada computador grava no seu score a pontuação do próprio jogador, com a fase marcada como (LAN).</li>
+<li>Não há login nem criptografia: usar apenas em rede privada confiável e liberar a porta TCP 50505 no firewall somente para redes privadas.</li>
+</ul>
+</section>
+
+<section class="secao continua">
+<h1 id="s5">5 JOGADORES E PONTUAÇÃO</h1>
+<p>A opção Mudar de jogador lista os jogadores cadastrados com o recorde de cada um. N cadastra um
+novo nome (até 12 caracteres, em maiúsculas), Enter escolhe com qual nome jogar e Delete
+pressionado duas vezes apaga um jogador; sempre resta pelo menos um. Os jogadores ficam em
+<code>storage/players.json</code>.</p>
+<p>A tela Score mostra as 10 melhores pontuações, gravadas em <code>storage/scores.json</code> com
+nome, fase e data, e destaca as do jogador ativo. No game over o jogo informa o vencedor ou o
+empate e, quando houver, a posição do novo recorde. As regras de pontuação são: bumper 100 pontos,
+alvo 250, buraco bônus 300 e slingshot 25; combo de +500 a cada 6 bumpers; pontuação em dobro por
+12 segundos após 3 alvos; multiball após 6 alvos.</p>
+</section>
+
+<section class="secao continua">
+<h1 id="s6">6 MENUS E NAVEGAÇÃO</h1>
+<p>Todas as telas são navegadas com W/S ou as setas, Enter para confirmar e Esc para voltar. A tela
+atual é o atributo <code>Game.state</code> e as transições ficam em <code>Game.menu_action()</code>.
+A classe <code>Menu</code> guarda apenas as opções e os cursores, sem depender do Pygame, e
+<code>Stage.menu_card()</code> desenha os cartões; listas longas rolam para manter a seleção
+visível. O Quadro 5 descreve cada tela.</p>
+<p class="legenda">Quadro 5 – Telas e recursos</p>
+<table>
+<thead><tr><th style="width:24%">Tela</th><th>Recursos implementados</th></tr></thead>
+<tr><td>Menu principal</td><td>Novo jogo, Multiplayer, Multiplayer LAN, Editor de fases, Mudar de jogador, Score, Configurações e Sair; mostra o jogador ativo e a fase.</td></tr>
+<tr><td>Configurações</td><td>Som, volume da música e dos efeitos (0 a 100%, passo 5), velocidade de queda (50 a 150%, passo 10), bolas por jogador (1 a 5) e mostrar FPS; salvas em <code>storage/settings.json</code>. Abertas pela pausa, voltam para a pausa.</td></tr>
+<tr><td>Fases e editor</td><td>Lista de fases, criação, edição, cópia da padrão, exclusão e teste (seção 3).</td></tr>
+<tr><td>Jogadores e score</td><td>Cadastro e troca de jogador; 10 melhores pontuações (seção 5).</td></tr>
+<tr><td>Multiplayer LAN</td><td>Hospedar partida, Conectar a um IP e Voltar; sala de espera com os nomes; menu local durante a partida.</td></tr>
+<tr><td>Pausa</td><td>Continuar, Reiniciar partida, Configurações, Menu principal e Sair do jogo.</td></tr>
+<tr><td>Game over</td><td>Placar final, vencedor ou empate e novo recorde; Enter joga de novo (em LAN, volta ao menu) e Esc volta ao menu.</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+</section>
+
+<section class="secao continua">
+<h1 id="s7">7 PADRÕES E DECISÕES DE ARQUITETURA</h1>
+<p class="legenda">Quadro 6 – Padrões e decisões aplicados no código</p>
+<table>
+<thead><tr><th style="width:28%">Padrão ou princípio</th><th>Aplicação no código</th></tr></thead>
+<tr><td>Fábrica orientada a dados</td><td>O catálogo <code>PIECES</code> associa cada peça à classe, raio, pontos e sprite; <code>Level.build()</code> cria os objetos Bumper, Target e Hole sem duplicar a lógica de colisão.</td></tr>
+<tr><td>Repositório simples</td><td><code>LevelStore</code>, <code>Settings</code>, <code>HighScores</code> e <code>Players</code> isolam a leitura, validação e gravação dos JSON.</td></tr>
+<tr><td>Máquina de estados</td><td><code>Game.state</code> e <code>Game.menu_action()</code> modelam menus, editor, LAN, pausa e partida. Não é o padrão State do GoF com uma classe por estado.</td></tr>
+<tr><td>Histórico de desfazer</td><td><code>LevelEditor.history</code> registra inclusões, remoções e limpezas para o comando Z.</td></tr>
+<tr><td>Cliente-servidor autoritativo</td><td><code>LANServer</code> simula as regras; <code>LANClient</code> envia teclas e recebe snapshots para desenhar.</td></tr>
+<tr><td>Separação de responsabilidades</td><td><code>InputManager</code> traduz eventos; <code>Game</code> aplica regras; a física trata colisões; <code>Stage</code> desenha; <code>AudioManager</code> toca sons. Menus, editor, fases e rede não dependem da janela e por isso são testáveis.</td></tr>
+<tr><td>Passo fixo com subpassos</td><td><code>FIXED_DT</code> = 1/120 s desacopla a física da taxa de quadros; cada bola avança no máximo meio raio por subpasso.</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+<p>O OpenGL continua no pipeline fixo (<code>glOrtho</code>, <code>glBegin</code> e textura do
+quadro em <code>modulos/core/display.py</code>). O fundo das faixas laterais usa uma segunda
+textura com repetição espelhada (<code>GL_MIRRORED_REPEAT</code>). Nenhum shader GLSL foi
+acrescentado.</p>
+</section>
+
+<section class="secao continua">
+<h1 id="s8">8 REQUISITOS INCREMENTAIS DO TRABALHO 2</h1>
+<p class="legenda">Quadro 7 – Requisitos incrementais e situação</p>
+<table>
+<thead><tr><th style="width:9%">ID</th><th>Critério verificável</th><th style="width:27%">Situação</th></tr></thead>
+<tr><td>RF14</td><td>Criar, editar (posicionar, remover, desfazer, limpar), nomear, salvar, apagar e testar fases pela interface.</td><td>Atendido.</td></tr>
+<tr><td>RF15</td><td>Aplicar as peças da fase às colisões, à pontuação e à renderização.</td><td>Atendido.</td></tr>
+<tr><td>RF16</td><td>Oferecer menus de novo jogo, multiplayer local e LAN, editor, jogadores, score, configurações e sair.</td><td>Atendido.</td></tr>
+<tr><td>RF17</td><td>Persistir as configurações e a fase escolhida; escolher a fase e o número de jogadores.</td><td>Atendido.</td></tr>
+<tr><td>RF18</td><td>Hospedar e conectar 2 jogadores via IPv4/TCP em LAN.</td><td>Implementado; validação entre 2 computadores pendente.</td></tr>
+<tr><td>RF19</td><td>Aceitar comandos de jogo apenas do jogador da vez.</td><td>Atendido.</td></tr>
+<tr><td>RF20</td><td>Calcular física, pontos e vidas só no servidor e enviar snapshots aos clientes.</td><td>Atendido.</td></tr>
+<tr><td>RF21</td><td>Tratar desconexão encerrando a partida e avisando o outro jogador.</td><td>Atendido.</td></tr>
+<tr><td>RF22</td><td>Cadastrar jogadores pelo nome e escolher o jogador ativo.</td><td>Atendido.</td></tr>
+<tr><td>RF23</td><td>Registrar o score por jogador e por fase.</td><td>Atendido.</td></tr>
+<tr><td>RNF6</td><td>Fases JSON validadas, nomes de arquivo seguros e peças inválidas descartadas.</td><td>Atendido.</td></tr>
+<tr><td>RNF7</td><td>Mensagens TCP JSON limitadas a 64 KiB e no máximo 2 jogadores.</td><td>Atendido.</td></tr>
+<tr><td>RNF8</td><td>Multiplayer restrito a LAN confiável; porta 50505 sem exposição pública.</td><td>Documentado no guia de execução.</td></tr>
+<tr><td>RNF9</td><td>Execução em Windows com Python 3.11–3.12, Pygame 2.6 e PyOpenGL 3.1.</td><td>Conferido em Linux; Windows pendente.</td></tr>
+<tr><td>RNF10</td><td>Arquitetura em módulos documentados e física a 120 Hz.</td><td>Atendido.</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+</section>
+
+<section class="secao continua">
+<h1 id="s9">9 DIAGRAMAS</h1>
+<p>Os diagramas foram gerados com Graphviz a partir da arquitetura atual.</p>
+<p class="legenda">Figura 1 – Organização dos módulos</p>
+<figure><img src="diagramas/1_modulos.png" alt="Organização dos módulos"></figure>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+<p class="legenda">Figura 2 – Classes principais e associações</p>
+<figure><img src="diagramas/2_classes.png" alt="Classes principais"></figure>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+<p class="legenda">Figura 3 – Telas e transições</p>
+<figure><img src="diagramas/3_navegacao.png" alt="Telas e transições"></figure>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+<p class="legenda">Figura 4 – Do editor ao arquivo JSON e à partida</p>
+<figure><img src="diagramas/4_editor.png" alt="Fluxo do editor"></figure>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+<p class="legenda">Figura 5 – Comunicação cliente-servidor em LAN</p>
+<figure><img src="diagramas/5_lan.png" alt="Comunicação em LAN"></figure>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+</section>
+
+<section class="secao continua">
+<h1 id="s10">10 ESTRUTURA DOS ARQUIVOS</h1>
+<p class="legenda">Quadro 8 – Arquivos e responsabilidades no Trabalho 2</p>
+<table>
+<thead><tr><th style="width:42%">Arquivo ou pasta</th><th>Responsabilidade</th></tr></thead>
+<tr><td>modulos/core/game.py</td><td>Estados, menus, regras da partida e lado cliente da LAN.</td></tr>
+<tr><td>modulos/core/engine.py</td><td>Loop de passo fixo; em LAN, recebe mensagens e envia teclas.</td></tr>
+<tr><td>modulos/core/display.py</td><td>Janela OpenGL, proporção da mesa, fundo repetido e conversão do mouse.</td></tr>
+<tr><td>modulos/core/levels.py; data/fases/padrao.json</td><td>Catálogo de peças, formato JSON, validação e <code>LevelStore</code>.</td></tr>
+<tr><td>modulos/core/level_editor.py</td><td>Editor: peça escolhida, posicionar, remover, desfazer e paleta.</td></tr>
+<tr><td>modulos/network/lan.py; protocol.py</td><td>Servidor e cliente TCP; formato das mensagens.</td></tr>
+<tr><td>modulos/ui/menu.py; stage.py</td><td>Opções e cursores dos menus; desenho da mesa, HUD, menus e editor.</td></tr>
+<tr><td>modulos/effects/highscores.py; players.py</td><td>Score e jogadores cadastrados.</td></tr>
+<tr><td>modulos/config/settings.py</td><td>Configurações salvas e validadas.</td></tr>
+<tr><td>modulos/events/commands.py</td><td>Teclado, mouse e digitação de nomes e IP.</td></tr>
+<tr><td>assets/fonts/</td><td>Fontes Exo 2 e Orbitron, com as licenças OFL.</td></tr>
+<tr><td>docs/entrega/</td><td>Guia de execução e roteiro de testes manuais.</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+</section>
+
+<section class="secao continua">
+<h1 id="s11">11 LIMITAÇÕES E ENTREGA</h1>
+<p>A execução gráfica foi conferida em Linux, com Python 3.12.3, Pygame 2.6.1, PyOpenGL 3.1.10 e
+renderização OpenGL: menus, editor com o mouse, fontes e fundo repetido.</p>
+<p>Ainda precisam de validação manual: a execução em Windows, o desempenho mínimo de 30 quadros por
+segundo nesse sistema e a partida em LAN entre dois computadores físicos, que depende da liberação da
+porta 50505 no firewall.</p>
+<p>A entrega contém o código, o atlas de sprites, os sons, as fontes e os diagramas. O
+ponto de entrada é <code>main.py</code> e as dependências estão em <code>requirements.txt</code>. O
+guia de execução no VS Code, inclusive da partida em LAN, está em
+<code>docs/entrega/GUIA_VSCODE_WINDOWS.md</code> e o roteiro de testes manuais em
+<code>docs/entrega/TESTE_MANUAL_WINDOWS.md</code>.</p>
+</section>
+
+
+</body>
+</html>

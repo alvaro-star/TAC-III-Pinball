@@ -30,13 +30,20 @@ class GameEngine:
                 dt=self.display.tick()
                 for event in pygame.event.get():
                     self.input.handle(event,self.game)
-                self.accumulator=min(self.accumulator+dt,FIXED_DT*8)
-                while self.accumulator>=FIXED_DT:
-                    self.game.update(FIXED_DT)
-                    self.accumulator-=FIXED_DT
+                self.game.poll_lan()
+                if self.game.remote_mode:
+                    # Partida em rede: a física roda no servidor; aqui só teclas e desenho.
+                    self.game.send_input()
+                    self.accumulator=0.0
+                else:
+                    self.accumulator=min(self.accumulator+dt,FIXED_DT*8)
+                    while self.accumulator>=FIXED_DT:
+                        self.game.update(FIXED_DT)
+                        self.accumulator-=FIXED_DT
                 self.game.fps = self.display.last_fps
                 self.game.render_backend = self.display.backend
                 self.game.draw(self.display.surface)
                 self.display.present()
         finally:
+            self.game.shutdown()
             pygame.quit()

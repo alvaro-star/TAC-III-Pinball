@@ -1,0 +1,23 @@
+digraph modulos {
+  graph [fontname="Liberation Serif"; fontsize=12; rankdir=LR, nodesep=0.2, ranksep=0.5];
+  node [shape=box, fontname="Liberation Serif", fontsize=11, style="rounded"]; edge [fontname="Liberation Serif", fontsize=10];
+  main [label="main.py"];
+  engine [label="core/engine.py\nGameEngine (loop 120 Hz)"];
+  display [label="core/display.py\nDisplay (OpenGL)"];
+  input [label="events/commands.py\nInputManager (teclado e mouse)"];
+  audio [label="audio/audio_manager.py\nAudioManager"];
+  game [label="core/game.py\nGame (estados e regras)"];
+  physics [label="physics/\nCollisionManager, TrajectoryController"];
+  entities [label="entities/\nBall, Flipper, Plunger, Bumper, Target, Hole"];
+  effects [label="effects/\nPlayerScore, HighScores, Players"];
+  config [label="config/\nconstants, Settings"];
+  levels [label="core/levels.py\nLevel, LevelStore, PIECES"];
+  editor [label="core/level_editor.py\nLevelEditor"];
+  ui [label="ui/\nMenu, Stage, SpriteSheet"];
+  net [label="network/\nLANServer, LANClient, protocolo"];
+  storage [label="storage/ e data/fases/\n(JSON)", shape=folder, style=""];
+  main -> engine;
+  engine -> {display input audio game};
+  game -> {physics entities effects config levels editor ui net};
+  levels -> storage; effects -> storage; config -> storage;
+}

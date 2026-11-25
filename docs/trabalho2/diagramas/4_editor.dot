@@ -1,0 +1,15 @@
+digraph editor {
+  graph [fontname="Liberation Serif"; fontsize=12; rankdir=TB, ranksep=0.4];
+  node [shape=box, fontname="Liberation Serif", fontsize=11, style="rounded"]; edge [fontname="Liberation Serif", fontsize=10];
+  a [label="Mouse e teclado\nclique esquerdo, clique direito, 1-9, Z, Esc"];
+  b [label="LevelEditor\nescolher peça, colocar, remover, desfazer"];
+  c [label="can_place()\nlimites da mesa, canal, arco e sobreposição"];
+  d [label="LevelStore.save()\nstorage/fases/<nome>.json"];
+  p [label="data/fases/padrao.json\n(fase padrão, somente leitura)", shape=folder, style=""];
+  e [label="Level.from_json()\nvalida peças e coordenadas"];
+  f [label="Level.build() + catálogo PIECES\nBumper, Target, Hole"];
+  g [label="Game.load_table()\ncolisões e pontuação"];
+  h [label="Stage.draw_playfield()\nsprites do atlas"];
+  a -> b -> c; c -> b [label="inválido", style=dashed];
+  b -> d [label="Salvar"]; d -> e; p -> e; e -> f -> g -> h;
+}

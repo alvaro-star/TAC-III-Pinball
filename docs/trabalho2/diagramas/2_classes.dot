@@ -1,0 +1,22 @@
+digraph classes {
+  graph [fontname="Liberation Serif"; fontsize=12; rankdir=LR, nodesep=0.15, ranksep=0.6];
+  node [shape=record, fontname="Liberation Serif", fontsize=10];
+  edge [fontname="Liberation Serif", fontsize=9, arrowhead=vee];
+  Game [label="Game|state, level, players, roster\lremote_mode, lan_client, lan_server\l|update(dt), menu_action(a)\lstart_game(), load_table(level)\lhost_lan(), join_lan(ip), apply_snapshot(m)\l"];
+  Level [label="Level|name, objects, path, builtin\l|build(), to_json(), from_json()\l"];
+  LevelStore [label="LevelStore|folder, default_file\l|all(), find(), save(), delete()\l"];
+  LevelEditor [label="LevelEditor|level, piece_index, history\l|place(), remove_at(), undo(), clear()\l"];
+  Menu [label="Menu|cursores das telas\l|move(), *_choice()\l"];
+  Settings [label="Settings|values\l|adjust(), load(), save()\l"];
+  HighScores [label="HighScores|entries (10)\l|add(), rank(), best()\l"];
+  Players [label="Players|names, active\l|add(), select(), remove()\l"];
+  Obstacle [label="Obstacle|x, y, radius, points, sprite\l|on_collide(ball)\l"];
+  Bumper; Target; Hole;
+  LANServer [label="LANServer|peers, game (headless)\l|start(), stop()\l"];
+  LANClient [label="LANClient|inbox\l|connect(), send(), poll()\l"];
+  Stage [label="Stage|imagens, fontes\l|draw_playfield(), menu_card()\ldraw_editor()\l"];
+  Game -> {Level LevelStore LevelEditor Menu Settings HighScores Players Stage LANClient LANServer};
+  LevelStore -> Level; LevelEditor -> Level; Level -> Obstacle [label="build()"];
+  {Bumper Target Hole} -> Obstacle [arrowhead=empty];
+  LANServer -> Game [label="simula", style=dashed];
+}

@@ -1,0 +1,24 @@
+digraph navegacao {
+  graph [fontname="Liberation Serif"; fontsize=12; rankdir=TB, nodesep=0.3, ranksep=0.45];
+  node [shape=box, fontname="Liberation Serif", fontsize=11, style="rounded"]; edge [fontname="Liberation Serif", fontsize=10];
+  menu [label="MENU PRINCIPAL"];
+  playing [label="PARTIDA\n(1 ou 2 jogadores locais)"];
+  paused [label="PAUSA"]; gameover [label="GAME OVER"];
+  settings [label="CONFIGURAÇÕES"]; scores [label="SCORE"];
+  players [label="JOGADORES"]; levels [label="LISTA DE FASES"];
+  editing [label="EDITOR"]; edmenu [label="MENU DO EDITOR"];
+  text [label="DIGITAR NOME / IP"];
+  lan [label="MULTIPLAYER LAN"]; lobby [label="SALA LAN"]; lanplay [label="PARTIDA LAN"]; lanpause [label="MENU LOCAL LAN"];
+  menu -> playing [label="Novo jogo / Multiplayer"];
+  playing -> paused [label="P / Esc"]; paused -> playing [label="Continuar"];
+  paused -> settings; settings -> paused [style=dashed];
+  playing -> gameover [label="sem bolas"]; gameover -> playing [label="Enter"]; gameover -> menu [label="Esc"];
+  menu -> settings; menu -> scores; menu -> players; menu -> levels; menu -> lan;
+  players -> text [label="N"]; levels -> text [label="N / E na padrão"]; text -> editing;
+  levels -> editing [label="E"]; editing -> edmenu [label="Esc"]; edmenu -> editing;
+  edmenu -> playing [label="Salvar e jogar"]; edmenu -> levels [label="Salvar e sair"];
+  levels -> playing [label="J"];
+  lan -> lobby [label="Hospedar"]; lan -> text [label="Conectar"]; text -> lobby [label="IP válido"];
+  lobby -> lanplay [label="2 jogadores"]; lanplay -> lanpause [label="P / Esc"]; lanpause -> lanplay;
+  lanplay -> lan [label="desconexão"]; lanplay -> menu [label="fim / sair"];
+}

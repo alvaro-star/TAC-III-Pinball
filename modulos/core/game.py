@@ -13,15 +13,21 @@ from modulos.effects.players import Players, MAX_NAME
 from modulos.config.settings import Settings, ITEMS
 from modulos.core.levels import LevelStore, Level, DEFAULT_NAME
 from modulos.core.level_editor import LevelEditor, palette_hit
-from modulos.ui.menu import Menu, MAIN_ITEMS, PAUSE_ITEMS, EDIT_ITEMS
+from modulos.ui.menu import (Menu, MAIN_ITEMS, PAUSE_ITEMS, EDIT_ITEMS, LAN_ITEMS,
+                             LAN_PAUSE_ITEMS)
+from modulos.network.lan import LANServer, LANClient, local_ip, SOUNDS
+from modulos.network.protocol import PORT
+from dataclasses import fields
 
 MAX_LEVEL_NAME = 16
 from modulos.ui.stage import Stage
 
 
 class Game:
-    def __init__(self, inputs, audio, root, storage=None):
-        """storage: pasta para settings.json e scores.json; None = só em memória."""
+    def __init__(self, inputs, audio, root, storage=None, headless=False):
+        """storage: pasta para settings.json e scores.json; None = só em memória.
+        headless: sem desenho (simulação do servidor LAN)."""
+        self.root = root
         self.running = True
         self.input = inputs
         self.audio = audio
@@ -31,7 +37,7 @@ class Game:
         self.players = [PlayerScore()]
         self.cm = CollisionManager()
         self.trajectory = TrajectoryController(self.cm)
-        self.stage = Stage(root)
+        self.stage = None if headless else Stage(root)
         self.balls = []
         self.flippers = [Flipper('left',(240,782)),Flipper('right',(480,782))]
         self.plunger = Plunger()
@@ -64,8 +70,26 @@ class Game:
         # Tela para onde as configurações voltam: menu inicial ou pausa.
         self.settings_return = 'menu'
         self.new_records = []
+        # Multiplayer LAN (ver modulos/network/lan.py).
+        self.lan_server = None
+        self.lan_client = None
+        self.lan_player_id = None
+        self.lan_names = []
+        self.lan_message = ''
+        self.lan_address = ''
+        self.lan_keys = None  # últimas teclas enviadas ao servidor
+        self.remote_mode = False
+        self.remote_state = 'playing'
+        self.lan_level = None
         self.load_table(self.level)
         self.apply_settings()
+
+    @property
+    def current_level_name(self):
+        """Fase em jogo: a do anfitrião numa partida em rede, senão a escolhida."""
+        if self.remote_mode and self.lan_level:
+            return self.lan_level.name
+        return self.level.name
 
     def load_table(self, level):
         self.bumpers, self.targets, self.holes = level.build()
@@ -81,18 +105,22 @@ class Game:
         if hasattr(self.audio,'apply'):
             self.audio.apply(self.settings)
 
+    def stop_music(self):
+        if hasattr(self.audio,'music_stop'):
+            self.audio.music_stop()
+
     def toggle_sound(self):
         self.settings.adjust('sound_on',1)
         self.settings.save()
         self.apply_settings()
 
     def back_to_menu(self):
+        self.leave_lan()
         self.state = 'menu'
         self.balls = []
         self.load_table(self.level)
         self.banner_time = 0.0
-        if hasattr(self.audio,'music_stop'):
-            self.audio.music_stop()
+        self.stop_music()
 
     def menu_action(self, action):
         """action: 'up', 'down', 'left', 'right', 'enter' ou 'back'."""
@@ -122,6 +150,26 @@ class Game:
                 self.select_pause(self.menu.pause_choice())
             elif action == 'back':
                 self.pause()
+        elif self.state == 'lan_menu':
+            if step:
+                self.menu.move('lan_menu',step)
+            elif action == 'enter':
+                self.select_lan(self.menu.lan_choice())
+            elif action == 'back':
+                self.lan_message = ''
+                self.state = 'menu'
+        elif self.state == 'lan_lobby':
+            if action == 'back':
+                self.leave_lan()
+                self.lan_message = ''
+                self.state = 'lan_menu'
+        elif self.state == 'lan_pause':
+            if step:
+                self.menu.move('lan_pause',step)
+            elif action == 'back' or (action == 'enter' and self.menu.lan_pause_choice() == 'continuar'):
+                self.state = self.remote_state
+            elif action == 'enter':
+                self.back_to_menu()
         elif self.state == 'levels':
             self.levels_action(action,step)
         elif self.state == 'players':
@@ -223,15 +271,18 @@ class Game:
             self.menu.players_index = min(i,len(self.roster.names)-1)
 
     # ---- Caixa de texto para nomes de jogadores e fases.
-    def ask_text(self, prompt, purpose, back, limit):
-        self.text = {'prompt':prompt,'value':'','purpose':purpose,'back':back,
+    def ask_text(self, prompt, purpose, back, limit, value=''):
+        self.text = {'prompt':prompt,'value':value,'purpose':purpose,'back':back,
                      'limit':limit,'error':''}
         self.state = 'text_input'
 
     def text_type(self, chars):
         if self.state != 'text_input':
             return
-        allowed = ''.join(c for c in chars.upper() if c.isalnum() or c in ' -_')
+        if self.text['purpose'] == 'ip':
+            allowed = ''.join(c for c in chars if c.isalnum() or c in '.-')
+        else:
+            allowed = ''.join(c for c in chars.upper() if c.isalnum() or c in ' -_')
         self.text['value'] = (self.text['value']+allowed)[:self.text['limit']]
         self.text['error'] = ''
 
@@ -248,7 +299,10 @@ class Game:
         elif action == 'enter':
             name = ' '.join(t['value'].split())
             if not name:
-                t['error'] = 'DIGITE UM NOME'
+                t['error'] = 'DIGITE UM NOME' if t['purpose'] != 'ip' else 'DIGITE O IP'
+            elif t['purpose'] == 'ip':
+                if not self.join_lan(name):
+                    t['error'] = self.lan_message
             elif t['purpose'] == 'player':
                 if self.roster.add(name) is None:
                     t['error'] = 'JOGADOR JÁ CADASTRADO'
@@ -324,6 +378,10 @@ class Game:
             self.start_game()
         elif choice == 'score':
             self.state = 'scores'
+        elif choice == 'lan':
+            self.menu.lan_index = 0
+            self.lan_message = ''
+            self.state = 'lan_menu'
         elif choice == 'fases':
             self.open_levels()
         elif choice == 'jogador':
@@ -367,6 +425,14 @@ class Game:
         self.audio.music_start()
 
     def pause(self):
+        if self.remote_mode:
+            # Em rede a partida continua no servidor; o menu é só local.
+            if self.state in ('playing','gameover'):
+                self.menu.lan_pause_index = 0
+                self.state = 'lan_pause'
+            elif self.state == 'lan_pause':
+                self.state = self.remote_state
+            return
         if self.state == 'playing':
             self.state='paused'
             self.menu.pause_index = 0
@@ -374,6 +440,10 @@ class Game:
             self.state='playing'
 
     def launch(self):
+        if self.remote_mode:
+            if self.lan_client and self.state == 'playing':
+                self.lan_client.send({'type':'launch'})
+            return
         if self.state!='playing':
             return
         for b in self.balls:
@@ -436,7 +506,7 @@ class Game:
                             if e is not None and self.highscores.rank(e)]
 
     def update(self, dt):
-        if self.state!='playing':
+        if self.state!='playing' or self.remote_mode:
             return
         self.phase_time += dt
         self.banner_time=max(0.0,self.banner_time-dt)
@@ -528,6 +598,174 @@ class Game:
                 self.audio.sound('bumper')
         # Quando a bola passa do limite da mesa, a vida é contabilizada no update.
 
+    # ---- Multiplayer LAN: o servidor calcula a partida, o cliente só envia teclas e desenha.
+    def select_lan(self, choice):
+        if choice == 'hospedar':
+            self.host_lan()
+        elif choice == 'conectar':
+            self.ask_text('IP DO COMPUTADOR QUE HOSPEDA','ip','lan_menu',40,self.lan_address)
+        else:
+            self.lan_message = ''
+            self.state = 'menu'
+
+    def host_lan(self, port=PORT):
+        self.leave_lan()
+        try:
+            self.lan_server = LANServer(self.level,self.root,self.settings.balls_per_player,
+                                        self.settings.gravity,port=port).start()
+            self.lan_client = LANClient().connect('127.0.0.1',self.lan_server.port)
+        except OSError as exc:
+            self.leave_lan()
+            self.lan_message = f'FALHA AO HOSPEDAR: {str(exc)[:40].upper()}'
+            self.state = 'lan_menu'
+            return False
+        self.lan_client.send({'type':'hello','name':self.roster.active})
+        self.remote_mode = True
+        self.lan_message = f'HOSPEDANDO EM {local_ip()} (PORTA {self.lan_server.port})'
+        self.state = 'lan_lobby'
+        return True
+
+    def join_lan(self, address, port=PORT):
+        self.leave_lan()
+        self.lan_address = address
+        try:
+            self.lan_client = LANClient().connect(address,port)
+        except OSError:
+            self.lan_client = None
+            self.lan_message = f'NÃO FOI POSSÍVEL CONECTAR A {address}'.upper()
+            return False
+        self.lan_client.send({'type':'hello','name':self.roster.active})
+        self.remote_mode = True
+        self.lan_message = f'CONECTADO A {address}'.upper()
+        self.state = 'lan_lobby'
+        return True
+
+    def leave_lan(self):
+        if self.lan_client:
+            self.lan_client.close()
+            self.lan_client = None
+        if self.lan_server:
+            self.lan_server.stop()
+            self.lan_server = None
+        self.lan_player_id = None
+        self.lan_names = []
+        self.lan_keys = None
+        self.lan_level = None
+        self.remote_mode = False
+
+    def shutdown(self):
+        self.leave_lan()
+
+    def send_input(self):
+        """Envia as teclas seguradas quando mudam (o servidor filtra pelo turno)."""
+        if not self.lan_client:
+            return
+        keys = {'left':bool(self.input.left),'right':bool(self.input.right),
+                'launch':bool(self.input.launch)}
+        if self.state != 'playing':
+            keys = dict.fromkeys(keys,False)
+        if keys != self.lan_keys:
+            self.lan_keys = keys
+            self.lan_client.send({'type':'input',**keys})
+
+    def poll_lan(self):
+        if not self.lan_client:
+            return
+        for msg in self.lan_client.poll():
+            kind = msg['type']
+            try:
+                if kind == 'welcome':
+                    self.lan_player_id = int(msg['player_id'])
+                elif kind == 'lobby':
+                    self.lan_names = [str(n) for n in msg.get('names',[])]
+                elif kind == 'start':
+                    self.lan_start(msg)
+                elif kind == 'snapshot':
+                    self.apply_snapshot(msg)
+                elif kind == 'error':
+                    self.lan_message = str(msg.get('message','ERRO DE REDE'))
+                    self.leave_lan()
+                    self.state = 'lan_menu'
+                elif kind == 'disconnected':
+                    self.lan_message = str(msg.get('message','DESCONECTADO'))
+                    playing = self.state not in ('lan_menu','lan_lobby')
+                    self.leave_lan()
+                    self.balls = []
+                    self.load_table(self.level)
+                    self.state = 'lan_menu'
+                    if playing:
+                        self.stop_music()
+                    return
+            except (KeyError,TypeError,ValueError):
+                continue  # mensagem malformada é ignorada
+
+    def lan_start(self, msg):
+        data = msg['level']
+        # A fase vem do anfitrião e passa pela mesma validação dos arquivos JSON.
+        self.lan_level = Level.from_json({'name':str(data['name']),
+                                          'layers':[{'objects':data['objects']}]})
+        self.load_table(self.lan_level)
+        self.player_names = [str(n) for n in msg['names']]
+        self.players = [PlayerScore() for _ in self.player_names]
+        self.player_count = len(self.players)
+        self.active_player = 0
+        self.flippers = [Flipper('left',(240,782)),Flipper('right',(480,782))]
+        self.plunger = Plunger()
+        self.new_records = []
+        self.remote_state = 'playing'
+        self.state = 'playing'
+        self.audio.music_start()
+
+    def apply_snapshot(self, msg):
+        """Copia o estado calculado pelo servidor; o cliente não simula física."""
+        before = self.remote_state
+        self.remote_state = msg['state'] if msg['state'] in ('playing','gameover') else 'playing'
+        if self.state != 'lan_pause':
+            self.state = self.remote_state
+        self.active_player = int(msg['active'])
+        names = {f.name for f in fields(PlayerScore)}
+        self.players = [PlayerScore(**{k:v for k,v in p.items() if k in names})
+                        for p in msg['players']]
+        balls = []
+        for x,y,ready,active in msg['balls']:
+            ball = Ball(self.trajectory,float(x),float(y),ready=bool(ready))
+            ball.active = bool(active)
+            balls.append(ball)
+        self.balls = balls
+        for flipper,(angle,active) in zip(self.flippers,msg['flippers']):
+            flipper.angle = float(angle)
+            flipper.active = bool(active)
+        self.plunger.charge = float(msg['plunger'])
+        self.banner = str(msg['banner'])
+        self.banner_time = float(msg['banner_time'])
+        for group,values in zip((self.bumpers,self.targets,self.holes),msg['flashes']):
+            for entity,value in zip(group,values):
+                entity.flash = float(value)
+        for name in msg.get('sounds',[]):
+            if name in SOUNDS:
+                self.audio.sound(name)
+        if self.remote_state == 'gameover' and before != 'gameover':
+            self.stop_music()
+            self.record_lan_score()
+
+    def record_lan_score(self):
+        """Cada computador grava no seu score só a pontuação do próprio jogador."""
+        i = self.lan_player_id
+        if i is None or i >= len(self.players) or self.lan_level is None:
+            return
+        entry = self.highscores.add(self.players[i].score,self.player_names[i],
+                                    f'{self.lan_level.name} (LAN)')
+        rank = self.highscores.rank(entry) if entry else None
+        self.new_records = [(i,rank)] if rank else []
+
+    def lan_status(self):
+        """Texto do rodapé na partida em rede."""
+        i = self.lan_player_id
+        if i is None or i >= len(self.player_names):
+            return 'MULTIPLAYER LAN'
+        turn = 'SUA VEZ' if self.active_player == i else f'VEZ DE {self.player_names[self.active_player]}'
+        return f'LAN  |  VOCÊ: {self.player_names[i]}  |  {turn}'
+
     def draw(self, surface):
         self.stage.draw_playfield(surface,self)
         hint='W/S OU SETAS: ESCOLHER  |  ENTER: CONFIRMAR'
@@ -573,6 +811,21 @@ class Game:
             card(surface,'EDITOR',[(label,None) for _,label in EDIT_ITEMS],self.menu.edit_index,
                  'W/S: ESCOLHER  |  ENTER: CONFIRMAR  |  ESC: VOLTAR',
                  subtitle=f'{self.editor.level.name}  ·  {len(self.editor.objects)} PEÇAS')
+        elif self.state=='lan_menu':
+            card(surface,'MULTIPLAYER LAN',[(label,None) for _,label in LAN_ITEMS],
+                 self.menu.lan_index,'DOIS COMPUTADORES NA MESMA REDE  |  PORTA TCP 50505',
+                 subtitle=self.lan_message or f'FASE: {self.level.name}  ·  JOGADOR: {self.roster.active}')
+        elif self.state=='lan_lobby':
+            joined=', '.join(self.lan_names) or '...'
+            me=('' if self.lan_player_id is None else
+                f'VOCÊ É O JOGADOR {self.lan_player_id+1}')
+            card(surface,'SALA LAN',[(self.lan_message,None),
+                                     (f'NA SALA ({len(self.lan_names)}/2): {joined}',None),
+                                     (me or 'AGUARDANDO IDENTIFICAÇÃO',None)],
+                 None,'A PARTIDA COMEÇA COM 2 JOGADORES  |  ESC: SAIR',compact=True)
+        elif self.state=='lan_pause':
+            card(surface,'PARTIDA LAN',[(label,None) for _,label in LAN_PAUSE_ITEMS],
+                 self.menu.lan_pause_index,'A PARTIDA CONTINUA ENQUANTO ESTE MENU ESTÁ ABERTO')
         elif self.state=='paused':
             card(surface,'PAUSADO',[(label,None) for _,label in PAUSE_ITEMS],
                  self.menu.pause_index,'W/S: ESCOLHER  |  ENTER: CONFIRMAR  |  ESC: CONTINUAR')
@@ -588,5 +841,6 @@ class Game:
                 i,rank=min(self.new_records,key=lambda r:r[1])
                 who='' if len(self.players)==1 else f'{self.player_names[i]}: '
                 lines += [f'NOVO RECORDE! {who}{rank}º LUGAR NO SCORE']
-            lines += ['ENTER: JOGAR NOVAMENTE  |  ESC: MENU']
+            lines += ['ENTER OU ESC: MENU' if self.remote_mode else
+                      'ENTER: JOGAR NOVAMENTE  |  ESC: MENU']
             self.stage.overlay(surface,'GAME OVER',lines,(252,95,125))

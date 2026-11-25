@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Relatório de implementação — Trabalho 2 — Pinball</title>
+<link rel="stylesheet" href="abnt.css">
+</head>
+<body>
+<header class="cabecalho">
+  <div class="titulo">Relatório de implementação: Trabalho 2 — Pinball TAC III</div>
+  <div class="autores">Alvaro Vargas e Ethan Abner</div>
+</header>
+
+<section class="secao continua">
+<h1 id="r1">1 OBJETIVO E VERSÃO DO CÓDIGO</h1>
+<p>Este relatório registra a implementação do Trabalho 2 sobre a versão atual do projeto em Python,
+Pygame e PyOpenGL, publicada no repositório <code>https://github.com/alvaro-star/TAC-III-Pinball.git</code>.
+Todos os módulos citados estão presentes no código. O
+GDD atualizado contém as regras, os diagramas e os requisitos formais.</p>
+</section>
+
+<section class="secao continua">
+<h1 id="r2">2 ENTREGAS E LOCALIZAÇÃO DOS ARQUIVOS</h1>
+<p class="legenda">Quadro 1 – Entregas, arquivos e demonstração</p>
+<table>
+<thead><tr><th style="width:18%">Funcionalidade</th><th style="width:38%">Arquivos principais</th><th>O que demonstrar</th></tr></thead>
+<tr><td>Editor de fases</td><td>modulos/core/levels.py; level_editor.py; data/fases/; storage/fases/</td><td>Nova fase → posicionar peças com o mouse → Salvar e jogar.</td></tr>
+<tr><td>Multiplayer LAN</td><td>modulos/network/lan.py; protocol.py; core/engine.py</td><td>Hospedar no PC A → conectar no PC B → turnos e snapshots.</td></tr>
+<tr><td>Jogadores e score</td><td>modulos/effects/players.py; highscores.py</td><td>Cadastrar um nome, jogar e ver o recorde no Score.</td></tr>
+<tr><td>Menus</td><td>modulos/core/game.py; ui/menu.py; ui/stage.py; events/commands.py</td><td>Menu principal, pausa, fases, jogadores, LAN e game over.</td></tr>
+<tr><td>Configurações</td><td>modulos/config/settings.py; audio/audio_manager.py; storage/settings.json</td><td>Som, volumes, velocidade de queda, bolas e FPS.</td></tr>
+<tr><td>Diagramas</td><td>Arquivos .dot e .png gerados com Graphviz</td><td>Módulos, classes, navegação, editor e LAN.</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+</section>
+
+<section class="secao continua">
+<h1 id="r3">3 ARQUITETURA TÉCNICA</h1>
+<p>A execução começa em <code>main.py</code> e segue para <code>modulos/core/engine.py</code>, que
+roda a física em passo fixo de 1/120 s, com subpassos por bola. A classe <code>Game</code> mantém
+as telas, as regras, a pontuação e as entidades. <code>Stage</code> desenha a mesa, o HUD, os
+menus e o editor em uma superfície do Pygame, enviada ao OpenGL como textura. Os sprites são
+recortados do atlas montado a partir das pranchas PINBALL1, PINBALL2 e PINBALL3. Não há shaders
+GLSL próprios.</p>
+<h2 id="r3-1">3.1 PADRÕES APLICADOS</h2>
+<p>Fábrica orientada a dados: o catálogo <code>PIECES</code> e <code>Level.build()</code> criam
+Bumper, Target e Hole a partir do JSON. Repositório simples: <code>LevelStore</code>,
+<code>Settings</code>, <code>HighScores</code> e <code>Players</code> isolam a persistência.
+Máquina de estados: <code>Game.state</code> e <code>Game.menu_action()</code> controlam as telas,
+sem classes separadas por estado. Histórico de desfazer no <code>LevelEditor</code>.
+Cliente-servidor: <code>LANServer</code> é autoritativo para física e pontuação, e
+<code>LANClient</code> envia teclas e recebe snapshots.</p>
+</section>
+
+<section class="secao continua">
+<h1 id="r4">4 EDITOR DE FASES</h1>
+<p>Na lista de fases: Enter escolhe a fase ativa, J joga, N cria, E edita (na fase PADRÃO cria uma
+cópia) e Delete duas vezes apaga. No editor: 1 a 9, roda do mouse ou clique na paleta escolhem a
+peça; clique esquerdo posiciona, com prévia verde ou vermelha; clique direito remove; Z desfaz; Esc
+abre o menu com Salvar e sair, Salvar e jogar, Limpar mesa e Sair sem salvar. O formato JSON segue o
+mapa do protótipo (<code>layers</code> com <code>objects</code> no formato <code>{piece, x, y}</code>).
+São 9 peças; as posições são validadas contra paredes, canal de lançamento, teto em arco, zona dos
+flippers e sobreposição. Paredes, flippers e slingshots continuam fixos.</p>
+</section>
+
+<section class="secao continua">
+<h1 id="r5">5 MULTIPLAYER LAN</h1>
+<p>Hospedar abre o servidor TCP na porta 50505, conecta o jogador 1 por 127.0.0.1 e aguarda o
+convidado, que informa o IPv4 do anfitrião. Com os dois na sala, a partida começa com a fase e as
+configurações do anfitrião. Só os comandos do jogador da vez são aplicados, e o turno alterna quando
+uma bola é perdida. A simulação roda no servidor a 120 Hz e os clientes recebem cerca de 60
+snapshots por segundo, com os sons da partida. Se um jogador sai, o outro volta ao menu LAN com
+aviso; um terceiro computador recebe SALA CHEIA. O modo exige rede privada confiável e não tem
+autenticação nem conexão pela internet.</p>
+</section>
+
+<section class="secao continua">
+<h1 id="r6">6 LIMITAÇÕES</h1>
+<p class="legenda">Quadro 2 – Situação da validação</p>
+<table>
+<thead><tr><th style="width:34%">Item</th><th>Situação</th></tr></thead>
+<tr><td>Interface Pygame/OpenGL</td><td>Conferida em Linux (Python 3.12.3, Pygame 2.6.1, PyOpenGL 3.1.10); Windows pendente.</td></tr>
+<tr><td>Áudio, FPS e LAN entre 2 PCs físicos</td><td>Pendente de teste manual no laboratório.</td></tr>
+</table>
+<p class="fonte">Fonte: elaborado pelos autores (2026).</p>
+<p>Para executar no VS Code, abra a pasta do projeto,
+instale o <code>requirements.txt</code> e execute <code>main.py</code>. O guia de execução está
+em <code>docs/entrega/GUIA_VSCODE_WINDOWS.md</code> e o roteiro de testes manuais em
+<code>docs/entrega/TESTE_MANUAL_WINDOWS.md</code>.</p>
+</section>
+
+
+</body>
+</html>

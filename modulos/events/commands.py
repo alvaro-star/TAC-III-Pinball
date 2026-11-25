@@ -57,10 +57,11 @@ class InputManager:
                 game.back_to_menu()
             elif k in (pygame.K_p, pygame.K_ESCAPE):
                 game.pause()
-            elif k == pygame.K_r:
+            elif k == pygame.K_r and not game.remote_mode:
                 game.start_game()
             elif k in (pygame.K_RETURN, pygame.K_KP_ENTER) and game.state == 'gameover':
-                game.start_game()
+                # Em rede quem decide uma nova partida é o anfitrião: volta ao menu.
+                game.back_to_menu() if game.remote_mode else game.start_game()
         elif event.type == pygame.KEYUP:
             if event.key in (pygame.K_a,pygame.K_LEFT):
                 self.left = False

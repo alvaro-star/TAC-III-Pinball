@@ -205,8 +205,10 @@ class Stage:
                       valign='top')
             self.text(s,f'{score.score:07d}',x,self.HUD_MID,26,COLORS['white'],valign='middle')
             self.text(s,f'BOLAS: {score.remaining}',x,self.HUD_BOTTOM,14,fg,valign='bottom')
-        self.text(s,f'FASE: {game.level.name}',43,self.HUD_BOTTOM,14,COLORS['gold'],valign='bottom')
-        if len(game.players)==1:
+        self.text(s,f'FASE: {game.current_level_name}',43,self.HUD_BOTTOM,14,COLORS['gold'],valign='bottom')
+        if game.remote_mode:
+            self.text(s,game.lan_status(),360,864,15,COLORS['gold'],center=True)
+        elif len(game.players)==1:
             self.text(s,'A / D - FLIPPERS    ESPAÇO - LANÇAR    P - PAUSAR',360,864,15,COLORS['muted'],center=True)
         else:
             self.text(s,'2 JOGADORES  |  ALTERNÂNCIA DE TURNOS  |  P - PAUSAR',360,864,15,COLORS['muted'],center=True)

@@ -1,0 +1,13 @@
+digraph lan {
+  graph [fontname="Liberation Serif"; fontsize=12; rankdir=TB, ranksep=0.45, nodesep=0.5];
+  node [shape=box, fontname="Liberation Serif", fontsize=11, style="rounded"]; edge [fontname="Liberation Serif", fontsize=10];
+  subgraph cluster_a { label="PC A (anfitrião)"; style=dashed;
+    server [label="LANServer (thread)\nGame headless: física 120 Hz\naceita só o jogador da vez"];
+    ca [label="LANClient J1\n127.0.0.1"]; }
+  cb [label="LANClient J2\nPC B (IPv4 do anfitrião)"];
+  ca -> server [label="hello, input, launch"];
+  cb -> server [label="hello, input, launch"];
+  server -> ca [label="welcome, lobby, start,\nsnapshot 60/s", style=bold];
+  server -> cb [label="welcome, lobby, start,\nsnapshot 60/s", style=bold];
+  note [label="TCP porta 50505 | JSON por linha | até 64 KiB por mensagem | 2 jogadores", shape=plaintext];
+}

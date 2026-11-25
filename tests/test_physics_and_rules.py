@@ -1,8 +1,5 @@
 """Testes independentes de driver gráfico e áudio."""
 import math
-import sys
-import types
-import importlib
 import pytest
 from modulos.physics.collision_manager import Vector, CollisionManager
 from modulos.physics.trajectory_controller import TrajectoryController
@@ -114,31 +111,6 @@ def test_multiball_trigger_after_six_targets():
         _,msg=p.add_points(250,'target')
         if msg:triggers.append(msg)
     assert triggers==['PONTUAÇÃO 2X','MULTIBALL']
-
-
-class FakeInput:
-    left=False
-    right=False
-    launch=False
-
-
-class FakeAudio:
-    muted=False
-    def sound(self, name):pass
-    def music_start(self):pass
-
-
-@pytest.fixture
-def game(monkeypatch):
-    stage_module=types.ModuleType('modulos.ui.stage')
-    stage_module.Stage=lambda root: None
-    monkeypatch.setitem(sys.modules,'modulos.ui.stage',stage_module)
-    # O import dinâmico permite testar o modelo sem exigir placa gráfica.
-    sys.modules.pop('modulos.core.game',None)
-    module=importlib.import_module('modulos.core.game')
-    obj=module.Game(FakeInput(),FakeAudio(),'.')
-    yield obj
-    sys.modules.pop('modulos.core.game',None)
 
 
 def test_game_starts_with_three_balls(game):

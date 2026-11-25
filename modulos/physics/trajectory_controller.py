@@ -7,11 +7,13 @@ from modulos.config.constants import GRAVITY, DRAG, MAX_SPEED
 class TrajectoryController:
     def __init__(self, collision_manager):
         self.collision_manager = collision_manager
+        # Multiplicador da gravidade ("velocidade de queda" nas configurações).
+        self.gravity_scale = 1.0
 
     def step(self, ball, dt):
         if not ball.active or ball.ready:
             return
-        ball.velocity.y += GRAVITY * dt
+        ball.velocity.y += GRAVITY * self.gravity_scale * dt
         damping = math.exp(-DRAG * dt)
         ball.velocity.x *= damping
         ball.velocity.y *= damping

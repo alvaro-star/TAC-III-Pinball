@@ -1,0 +1,64 @@
+{
+    "height": 900,
+    "width": 720,
+    "layers": [
+        {
+            "name": "Obstáculos",
+            "objects": [
+                {
+                    "piece": "alvo_25",
+                    "x": 237,
+                    "y": 222
+                },
+                {
+                    "piece": "alvo_10",
+                    "x": 363,
+                    "y": 196
+                },
+                {
+                    "piece": "alvo_50",
+                    "x": 483,
+                    "y": 222
+                },
+                {
+                    "piece": "bumper_azul",
+                    "x": 284,
+                    "y": 342
+                },
+                {
+                    "piece": "bumper_dourado",
+                    "x": 444,
+                    "y": 340
+                },
+                {
+                    "piece": "bumper_rosa",
+                    "x": 363,
+                    "y": 257
+                },
+                {
+                    "piece": "bumper_vermelho",
+                    "x": 192,
+                    "y": 507
+                },
+                {
+                    "piece": "bumper_pequeno",
+                    "x": 524,
+                    "y": 505
+                },
+                {
+                    "piece": "buraco",
+                    "x": 360,
+                    "y": 447
+                }
+            ],
+            "opacity": 1,
+            "visible": true,
+            "x": 0,
+            "y": 0
+        }
+    ],
+    "name": "PADRÃO",
+    "orientation": "orthogonal",
+    "type": "pinball",
+    "version": "1.0"
+}

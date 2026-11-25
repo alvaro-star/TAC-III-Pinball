@@ -4,6 +4,9 @@ import random
 from pathlib import Path
 import pygame
 from .sprite_sheet import SpriteSheet
+from .menu import MENU_STATES
+from modulos.core.levels import PIECES, PIECE_KEYS
+from modulos.core.level_editor import palette_slot, PALETTE_SIZE, PALETTE_STEP, SHORT
 from modulos.config.constants import (WIDTH, HEIGHT, LEFT, RIGHT, TOP, BOTTOM, COLORS,
                        ARCH_CENTER_X, ARCH_CENTER_Y, ARCH_RADIUS)
 
@@ -18,9 +21,10 @@ class Stage:
         atlas = SpriteSheet(pinball_folder)
         for name in atlas.sprites:
             self.images[name] = atlas.get(name)
-        fontfile = self.root/'assets'/'fonts'/'FreeSans.ttf'
+        # Fontes OFL incluídas no projeto: Exo 2 (textos) e Orbitron (títulos).
+        fontfile = self.root/'assets'/'fonts'/'Exo2.ttf'
         self.font_name = str(fontfile) if fontfile.exists() else None
-        titlefont = self.root/'assets'/'fonts'/'Call of Ops Duty II.otf'
+        titlefont = self.root/'assets'/'fonts'/'Orbitron.ttf'
         self.title_fontfile = str(titlefont) if titlefont.exists() else self.font_name
         self.font_cache = {}
         self.base = self._create_background()
@@ -28,17 +32,27 @@ class Stage:
     def font(self, size, title=False):
         key = (size,title)
         if key not in self.font_cache:
-            self.font_cache[key] = pygame.font.Font(self.title_fontfile if title else self.font_name, size)
+            font = pygame.font.Font(self.title_fontfile if title else self.font_name, size)
+            font.set_bold(not title)  # Orbitron já é encorpada; negrito sintético a deixa vazada
+            self.font_cache[key] = font
         return self.font_cache[key]
 
-    def text(self, surface, message, x, y, size=19, color=None, center=False, title=False):
+    def text(self, surface, message, x, y, size=19, color=None, center=False, title=False,
+             valign=None):
+        """valign alinha pela altura das maiúsculas: 'top' (topo da letra em y),
+        'middle' (centro da letra em y) ou 'bottom' (linha de base em y)."""
         fg = COLORS['white'] if color is None else color
-        img = self.font(size,title).render(str(message),True,fg)
+        font = self.font(size,title)
+        img = font.render(str(message),True,fg)
         box = img.get_rect()
+        top = int(y)
+        if valign:
+            ascent, cap = font.get_ascent(), font.metrics('H')[0][3]
+            top = round(y-ascent+{'top':cap,'middle':cap/2,'bottom':0}[valign])
         if center:
-            box.midtop = (int(x),int(y))
+            box.midtop = (int(x),top)
         else:
-            box.topleft = (int(x),int(y))
+            box.topleft = (int(x),top)
         surface.blit(img,box)
 
     @staticmethod
@@ -85,13 +99,6 @@ class Stage:
         # Barreira lateral em ziguezague (slingshots).
         pygame.draw.lines(s,(255,169,54),False,[(158,619),(222,701),(194,681)],6)
         pygame.draw.lines(s,(255,169,54),False,[(514,619),(475,701),(496,681)],6)
-        pygame.draw.circle(s,(27,63,91),(360,447),46)
-        pygame.draw.circle(s,(112,48,140),(360,447),40,width=3)
-        pygame.draw.circle(s,(23,11,42),(360,447),29)
-        for i in range(10):
-            phi = 2*math.pi*i/10
-            x=360+35*math.cos(phi);y=447+35*math.sin(phi)
-            pygame.draw.circle(s,(246,89,165),(int(x),int(y)),3)
         rng = random.Random(83)
         for _ in range(70):
             x=rng.randint(15,WIDTH-15);y=rng.randint(112,HEIGHT-18)
@@ -100,6 +107,30 @@ class Stage:
             if not inside:
                 pygame.draw.circle(s,(130,177,217),(x,y),rng.choice([1,1,1,2]))
         return s
+
+    def hole(self, surface, cx, cy, flash=0.0, scale=1.0):
+        """Buraco bônus: anel com luzes; desenhado onde a fase o posiciona."""
+        c=(int(cx),int(cy))
+        pygame.draw.circle(surface,(27,63,91),c,round(46*scale))
+        pygame.draw.circle(surface,(112,48,140),c,round(40*scale),width=3)
+        pygame.draw.circle(surface,(23,11,42),c,round(29*scale))
+        for i in range(10):
+            phi = 2*math.pi*i/10
+            pygame.draw.circle(surface,(246,89,165),(round(cx+35*scale*math.cos(phi)),
+                                                     round(cy+35*scale*math.sin(phi))),3)
+        if flash:
+            pygame.draw.circle(surface,COLORS['pink'],c,round(45*scale),4)
+        if scale>=1:
+            self.text(surface,'BÔNUS',cx,cy-14,13,COLORS['pink'],center=True)
+
+    def piece(self, surface, key, cx, cy, flash=0.0, diameter=None):
+        """Desenha uma peça do catálogo de fases (paleta, prévia ou mesa)."""
+        _,_,radius,_,sprite = PIECES[key]
+        if sprite is None:
+            self.hole(surface,cx,cy,flash,1.0 if diameter is None else diameter/92)
+            return
+        extra = 8 if key.startswith('bumper') else 7
+        self.sprite(surface,sprite,cx,cy,diameter or int(radius*2+extra),flash)
 
     def sprite(self, surface, name, cx, cy, diameter, flash=0.0):
         im = self.images.get(name)
@@ -118,15 +149,11 @@ class Stage:
     def draw_playfield(self, surface, game):
         surface.blit(self.base,(0,0))
         # Luzes: cada sprite vem das pranchas PINBALL1-3 anexadas ao trabalho.
-        for i, target in enumerate(game.targets):
-            self.sprite(surface,('target25','target10','target50')[i],target.x,target.y,
-                        int(target.radius*2+7),target.flash)
-        for i, bumper in enumerate(game.bumpers):
-            self.sprite(surface,('bumper_blue','bumper_gold','bumper_pink','bumper_red','bumper_blue')[i],
-                        bumper.x,bumper.y,int(bumper.radius*2+8),bumper.flash)
-        if game.hole.flash:
-            pygame.draw.circle(surface,COLORS['pink'],(int(game.hole.x),int(game.hole.y)),45,4)
-        self.text(surface,'BÔNUS',360,433,13,COLORS['pink'],center=True)
+        # Cada entidade guarda a chave da peça (label) definida no arquivo da fase.
+        for hole in game.holes:
+            self.hole(surface,hole.x,hole.y,hole.flash)
+        for entity in [*game.targets,*game.bumpers]:
+            self.piece(surface,entity.label,entity.x,entity.y,entity.flash)
         # Flippers animados; cor e formato reproduzem a identidade das pranchas.
         for flip in game.flippers:
             a=(round(flip.pivot.x),round(flip.pivot.y))
@@ -154,17 +181,31 @@ class Stage:
                 self.sprite(surface,'ball',cx,cy,26)
         self.draw_hud(surface,game)
 
+    # Painel do topo: margem interna igual em cima e embaixo (fileiras topo/meio/base).
+    HUD = pygame.Rect(20,8,WIDTH-40,103)
+    HUD_PAD = 18
+    HUD_TOP = HUD.top+HUD_PAD
+    HUD_MID = HUD.centery
+    HUD_BOTTOM = HUD.bottom-HUD_PAD
+
     def draw_hud(self,s,game):
-        pygame.draw.rect(s,(7,12,29),(20,8,WIDTH-40,103),border_radius=13)
-        pygame.draw.rect(s,(40,114,187),(20,8,WIDTH-40,103),2,border_radius=13)
-        self.text(s,'PINBALL',43,10,31,COLORS['cyan'],title=True)
-        self.text(s,'TAC III  /  ARCADE',43,52,14,COLORS['muted'])
+        pygame.draw.rect(s,(7,12,29),self.HUD,border_radius=13)
+        pygame.draw.rect(s,(40,114,187),self.HUD,2,border_radius=13)
+        self.text(s,'PINBALL',43,self.HUD_TOP,26,COLORS['cyan'],title=True,valign='top')
+        if game.state not in ('editing','editor_menu'):
+            self.text(s,'TAC III  /  ARCADE',43,self.HUD_MID+4,13,COLORS['muted'],valign='middle')
+        if game.state in MENU_STATES:
+            # Fora da partida o placar da última partida não aparece.
+            return
         for i,score in enumerate(game.players):
             x = 322 if i == 0 else 506
             fg = COLORS['gold'] if game.active_player == i else COLORS['muted']
-            self.text(s,f'JOGADOR {i+1}',x,16,14,fg)
-            self.text(s,f'{score.score:07d}',x,35,28,COLORS['white'])
-            self.text(s,f'BOLAS: {score.remaining}',x,76,15,fg)
+            names = getattr(game,'player_names',[])
+            self.text(s,names[i] if i < len(names) else f'JOGADOR {i+1}',x,self.HUD_TOP,14,fg,
+                      valign='top')
+            self.text(s,f'{score.score:07d}',x,self.HUD_MID,26,COLORS['white'],valign='middle')
+            self.text(s,f'BOLAS: {score.remaining}',x,self.HUD_BOTTOM,14,fg,valign='bottom')
+        self.text(s,f'FASE: {game.level.name}',43,self.HUD_BOTTOM,14,COLORS['gold'],valign='bottom')
         if len(game.players)==1:
             self.text(s,'A / D - FLIPPERS    ESPAÇO - LANÇAR    P - PAUSAR',360,864,15,COLORS['muted'],center=True)
         else:
@@ -184,9 +225,114 @@ class Stage:
             self.text(s,game.banner,359,541,24,COLORS['gold'],center=True,title=True)
         self.text(s,'SOM: '+('DESLIGADO' if game.audio.muted else 'LIGADO')+' [M]',526,884,12,COLORS['muted'])
         # Indicadores úteis para demonstrar os requisitos de desempenho/OpenGL.
-        backend = getattr(game, 'render_backend', 'a verificar').upper()
-        fps = getattr(game, 'fps', 0.0)
-        self.text(s, f'RENDER: {backend} / FPS: {fps:.0f}', 20,884,11,COLORS['muted'])
+        if game.settings.show_fps:
+            backend = getattr(game, 'render_backend', 'a verificar').upper()
+            fps = getattr(game, 'fps', 0.0)
+            self.text(s, f'RENDER: {backend} / FPS: {fps:.0f}', 20,884,11,COLORS['muted'])
+
+    MAX_ROWS = 11
+
+    def menu_card(self, s, title, rows, selected=None, footer='', accent=None,
+                  subtitle='', highlight=(), compact=False, arrows=False):
+        """Cartão central com linhas (rótulo, valor); a linha selecionada fica destacada.
+        Listas longas rolam para manter a seleção visível."""
+        tint=pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
+        tint.fill((4,9,22,205))
+        s.blit(tint,(0,0))
+        first=0
+        if len(rows)>self.MAX_ROWS:
+            first=min(max(0,(selected or 0)-self.MAX_ROWS//2),len(rows)-self.MAX_ROWS)
+        shown=rows[first:first+self.MAX_ROWS]
+        spacing=38 if compact or len(rows)>8 else 44
+        top_gap=34 if subtitle else 0
+        height=128+top_gap+len(shown)*spacing+(46 if footer else 0)
+        card=pygame.Rect(50,(HEIGHT-height)//2,WIDTH-100,height)
+        pygame.draw.rect(s,(13,25,51),card,border_radius=20)
+        pygame.draw.rect(s,COLORS['cyan'],card,3,border_radius=20)
+        self.text(s,title,WIDTH//2,card.y+26,40,accent or COLORS['cyan'],center=True,title=True)
+        if subtitle:
+            self.text(s,subtitle,WIDTH//2,card.y+84,15,COLORS['muted'],center=True)
+        y=card.y+106+top_gap
+        for i,(label,value) in enumerate(shown,start=first):
+            active = i==selected
+            if active:
+                row=pygame.Rect(card.x+22,y-10,card.w-44,spacing-6)
+                pygame.draw.rect(s,(28,58,104),row,border_radius=10)
+                pygame.draw.rect(s,COLORS['gold'],row,2,border_radius=10)
+            fg = COLORS['gold'] if active or i in highlight else COLORS['white']
+            if value is None:
+                self.text(s,label,WIDTH//2,y,20,fg,center=True)
+            else:
+                self.text(s,label,card.x+44,y,18,fg)
+                shown_value = f'<  {value}  >' if active and arrows else value
+                img = self.font(17).render(str(shown_value),True,fg)
+                s.blit(img,(card.right-44-img.get_width(),y+1))
+            y+=spacing
+        if first>0:
+            self.text(s,'▲',card.right-30,card.y+106+top_gap-30,14,COLORS['muted'])
+        if first+len(shown)<len(rows):
+            self.text(s,'▼',card.right-30,y-12,14,COLORS['muted'])
+        if footer:
+            self.text(s,footer,WIDTH//2,card.bottom-40,13,COLORS['muted'],center=True)
+
+    def text_box(self, s, box):
+        """Caixa de digitação de nome (jogador ou fase)."""
+        tint=pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
+        tint.fill((4,9,22,215))
+        s.blit(tint,(0,0))
+        card=pygame.Rect(70,300,WIDTH-140,270)
+        pygame.draw.rect(s,(13,25,51),card,border_radius=20)
+        pygame.draw.rect(s,COLORS['cyan'],card,3,border_radius=20)
+        self.text(s,box['prompt'],WIDTH//2,card.y+30,20,COLORS['cyan'],center=True)
+        field=pygame.Rect(card.x+40,card.y+84,card.w-80,58)
+        pygame.draw.rect(s,(6,14,32),field,border_radius=10)
+        pygame.draw.rect(s,COLORS['gold'],field,2,border_radius=10)
+        caret='_' if pygame.time.get_ticks()//450%2==0 else ' '
+        self.text(s,box['value']+caret,WIDTH//2,field.y+12,28,COLORS['white'],center=True)
+        self.text(s,f"{len(box['value'])}/{box['limit']}",field.right-8,field.bottom+6,12,
+                  COLORS['muted'])
+        if box['error']:
+            self.text(s,box['error'],WIDTH//2,card.y+168,16,COLORS['red'],center=True)
+        self.text(s,'DIGITE O NOME  |  ENTER: CONFIRMAR  |  ESC: CANCELAR',WIDTH//2,card.bottom-40,
+                  13,COLORS['muted'],center=True)
+
+    def draw_editor(self, s, editor):
+        """Paleta de peças à esquerda, prévia sob o mouse e instruções no painel do topo."""
+        for i,key in enumerate(PIECE_KEYS):
+            cx,cy=palette_slot(i)
+            box=pygame.Rect(cx-36,cy-PALETTE_STEP//2+3,72,PALETTE_STEP-6)
+            active = i==editor.piece_index
+            pygame.draw.rect(s,(28,58,104) if active else (9,18,38),box,border_radius=9)
+            pygame.draw.rect(s,COLORS['gold'] if active else (40,114,187),box,2,border_radius=9)
+            self.piece(s,key,cx,cy-8,diameter=PALETTE_SIZE-8)
+            self.text(s,f'{i+1} {SHORT[key]}',cx,cy+18,10,
+                      COLORS['gold'] if active else COLORS['muted'],center=True)
+        # Prévia: anel verde onde a peça cabe, vermelho onde não cabe.
+        if editor.cursor:
+            x,y=editor.cursor
+            if 100<x<RIGHT and TOP<y<BOTTOM:
+                radius=PIECES[editor.piece][2]
+                ghost=pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)
+                self.piece(ghost,editor.piece,x,y)
+                ghost.set_alpha(150)
+                s.blit(ghost,(0,0))
+                ok=editor.valid_at(x,y)
+                pygame.draw.circle(s,(80,230,120) if ok else COLORS['red'],(round(x),round(y)),
+                                   int(radius)+6,2)
+                target=editor.object_at(x,y)
+                if target:
+                    pygame.draw.circle(s,COLORS['red'],(target['x'],target['y']),
+                                       int(PIECES[target['piece']][2])+10,1)
+        # Painel do topo.
+        mark='*' if editor.dirty else ''
+        self.text(s,f'EDITANDO: {editor.level.name}{mark}',290,self.HUD_TOP,16,COLORS['gold'],valign='top')
+        self.text(s,f'PEÇA: {PIECES[editor.piece][0]}',290,self.HUD_MID,16,COLORS['white'],valign='middle')
+        self.text(s,'1-9 OU RODA DO MOUSE: TROCAR PEÇA',290,self.HUD_BOTTOM,13,COLORS['muted'],valign='bottom')
+        self.text(s,f'PEÇAS NA MESA: {len(editor.objects)}',43,self.HUD_BOTTOM,14,COLORS['muted'],valign='bottom')
+        self.text(s,'CLIQUE ESQ.: COLOCAR   |   CLIQUE DIR.: REMOVER   |   Z: DESFAZER   |   ESC: MENU',
+                  WIDTH//2,866,12,COLORS['muted'],center=True)
+        self.text(s,'A PEÇA SÓ PODE FICAR ACIMA DOS SLINGSHOTS E FORA DO CANAL DE LANÇAMENTO',
+                  WIDTH//2,883,11,COLORS['muted'],center=True)
 
     def overlay(self,s,title,lines,accent=None):
         tint=pygame.Surface((WIDTH,HEIGHT),pygame.SRCALPHA)

@@ -31,6 +31,12 @@ class Flipper(Actuator):
         self.angular_velocity = delta/dt if dt else 0
 
     @property
+    def swinging_up(self):
+        """True enquanto o flipper sobe (esquerdo gira no sentido negativo, direito no positivo)."""
+        direction = -1 if self.side == 'left' else 1
+        return self.angular_velocity*direction > 0.5
+
+    @property
     def tip(self):
         return self.pivot + Vector(math.cos(self.angle), math.sin(self.angle))*self.length
 

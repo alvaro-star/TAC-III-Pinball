@@ -63,10 +63,16 @@ Configurações `.vscode/settings.json` e `.vscode/launch.json` já incluídas: 
 
 ## 6. Controles
 
-- `1` / `2` no menu: número de jogadores; `Enter` inicia a partida.
+- **Menu inicial:** `W`/`S` ou setas para escolher, `Enter` para confirmar, `Esc` para voltar. Opções: Novo jogo (1 jogador), Multiplayer (2 jogadores em turnos), Editor de fases, Mudar de jogador, Score, Configurações e Sair. Novo jogo e Multiplayer usam a fase escolhida, mostrada no topo do menu.
+- **Editor de fases:** lista a fase PADRÃO e as fases criadas. `Enter` escolhe a fase que será jogada, `J` joga na hora, `E` edita (na PADRÃO cria uma cópia, pois ela é somente leitura), `N` cria uma fase nova (pede o nome) e `Del`/`X` apaga (pressionar duas vezes). No editor, a paleta à esquerda lista todas as peças: `1`–`9`, roda do mouse ou clique escolhem a peça; clique esquerdo posiciona onde o mouse estiver (anel verde = cabe, vermelho = não cabe) e clique direito remove; `Z` desfaz. `Esc` abre o menu Continuar editando / Salvar e sair / Salvar e jogar / Limpar mesa / Sair sem salvar. As fases ficam em `storage/fases/*.json`, no mesmo formato da fase padrão `data/fases/padrao.json`.
+- **Mudar de jogador:** lista os jogadores cadastrados com seus recordes. `Enter` escolhe com qual nome jogar, `N` cadastra um novo nome e `Del`/`X` apaga (duas vezes). No Multiplayer o jogador 2 é o próximo cadastrado. Os jogadores ficam em `storage/players.json` e o score registra o nome e a fase de cada pontuação.
+- **Configurações:** `A`/`D` ou setas laterais ajustam som, volume da música, volume dos efeitos, velocidade de queda (gravidade), bolas por jogador e exibição do FPS. São salvas em `storage/settings.json`; o score fica em `storage/scores.json`.
 - `A` ou `←`: flipper esquerdo; `D` ou `→`: flipper direito.
 - **Segurar e soltar `Espaço`**: ajustar força e lançar a bola.
-- `P` ou `Esc`: pausar/continuar; `R`: reiniciar; `M`: silenciar/reativar.
+- `P` ou `Esc`: pausa. O **menu de pausa** é navegado como o inicial (`W`/`S` e `Enter`) e tem Continuar, Reiniciar partida, Configurações (voltam para a pausa), Menu principal e Sair do jogo; `Esc` ou `P` continuam a partida.
+- `R`: reiniciar durante a partida; `M`: silenciar/reativar em qualquer tela.
+- Segurar o flipper levantado prende a bola sobre ele; ela só é rebatida com força enquanto o flipper sobe.
+- Game Over: `Enter` joga novamente, `Esc` volta ao menu.
 - O painel inferior mostra o backend gráfico e FPS observados. O mínimo previsto no GDD é **30 FPS**, que precisa ser comprovado em Windows.
 
 ## 7. Solução de problemas

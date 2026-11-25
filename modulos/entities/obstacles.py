@@ -3,9 +3,10 @@ from ..physics.collision_manager import CollisionManager
 
 
 class Obstacle:
-    def __init__(self, x, y, radius, points, label):
+    def __init__(self, x, y, radius, points, label, sprite=None):
         self.x, self.y, self.radius = float(x),float(y),float(radius)
         self.points, self.label = int(points),label
+        self.sprite = sprite  # nome no atlas; None = desenho próprio (buraco)
         self.flash = 0.0
 
     def update(self, dt):

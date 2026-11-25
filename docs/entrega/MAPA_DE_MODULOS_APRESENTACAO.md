@@ -18,7 +18,14 @@
 | Obstáculos | `modulos/entities/obstacles.py` | `Obstacle`, `Bumper`, `Target` e `Hole`. |
 | Regras e turnos | `modulos/core/game.py` | Coordena jogadores, vidas, perdas de bola, multiball, entidades e efeitos. |
 | Regras de pontos | `modulos/effects/score.py` | `PlayerScore`, combos, multiplicador e multiball. |
-| Teclado | `modulos/events/commands.py` | Converte eventos `pygame.KEYDOWN/KEYUP` em comandos. |
+| Teclado e mouse | `modulos/events/commands.py` | Converte eventos `pygame.KEYDOWN/KEYUP` em comandos; nas telas de menu traduz teclas em ações (`up`, `down`, `left`, `right`, `enter`, `back`, `edit`, `new`, `play`, `delete`); no editor converte cliques e roda do mouse (via `Display.to_logical`) e na caixa de nome repassa `TEXTINPUT`. |
+| Menu inicial e de pausa | `modulos/ui/menu.py` + `modulos/core/game.py` (`menu_action`) | Inicial: Novo jogo, Multiplayer, Editor de fases, Mudar de jogador, Score, Configurações e Sair. Pausa: Continuar, Reiniciar, Configurações, Menu principal e Sair. Desenho em `Stage.menu_card`. |
+| Configurações | `modulos/config/settings.py` | Som, volumes, velocidade de queda, bolas por jogador e FPS; salvas em `storage/settings.json`. |
+| Score | `modulos/effects/highscores.py` | 10 melhores pontuações (nome do jogador e fase), gravadas no Game Over em `storage/scores.json`. |
+| Jogadores | `modulos/effects/players.py` | Jogadores cadastrados e jogador ativo em `storage/players.json`. |
+| Fases | `modulos/core/levels.py` | Catálogo de peças (`PIECES`), formato JSON da fase, fase padrão `data/fases/padrao.json` (recriada por `create_default_level` se faltar), regras de posicionamento e `LevelStore` para `storage/fases/`. |
+| Editor de fases | `modulos/core/level_editor.py` + `Stage.draw_editor` | Peça escolhida, paleta, colocar/remover/desfazer; desenho da paleta e da prévia sob o mouse. |
+| Fundo da janela | `modulos/core/display.py` | Repete o fundo de galáxia (textura `GL_MIRRORED_REPEAT`) nas faixas fora da mesa quando a janela não tem a proporção 720×900. |
 | Sprite sheet (arquivo) | `assets/pinball/pinball_atlas.png` | **Atlas usado em execução**, produzido com recortes das três pranchas recebidas. |
 | Coordenadas dos sprites | `assets/pinball/pinball_atlas.json` | Retângulos x/y/largura/altura dos itens do atlas. |
 | Sprite sheet (código) | `modulos/ui/sprite_sheet.py` | `SpriteSheet.get()` faz `subsurface(rect)` no atlas, sem exigir Pillow em runtime. |
@@ -28,7 +35,7 @@
 | Efeitos de som | `assets/sound/{flipper,launch,bumper,target,bonus,lose,gameover}.wav` | Efeitos WAV sintetizados para demonstrar RF11. |
 | Trilha | `assets/sound/music.wav` | Trilha WAV sintetizada para RF12. |
 | Áudio (código) | `modulos/audio/audio_manager.py` | Carrega, reproduz e silencia sons via `pygame.mixer`. |
-| Aparência/idioma | `modulos/config/`, `locale/` | Parâmetros e referências de configuração. |
+| Aparência/idioma | `modulos/config/theme.py`, `locale/` | Parâmetros e referências de configuração. |
 | Diagramas UML | `docs/classes_game.png`, `docs/packages_game.png` | Relações de classes e módulos. |
 | GDD original | `docs/entrega/GDD_original.docx` | Documento entregue, preservado sem alteração. |
 | GDD complementado | `docs/entrega/GDD_COM_ANEXO_TECNICO.docx` | Cópia com mapa e guia anexados para apresentação. |

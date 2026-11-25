@@ -15,10 +15,13 @@ class GameEngine:
     def __init__(self, allow_fallback=False):
         pygame.mixer.pre_init(frequency=44100,size=-16,channels=2,buffer=512)
         pygame.init()
-        self.display=Display(allow_fallback=allow_fallback)
+        self.display=Display(allow_fallback=allow_fallback,
+                             background=ROOT/'assets'/'image'/'back.jpg')
         self.input=InputManager()
+        self.input.to_logical=self.display.to_logical
+        pygame.key.start_text_input()  # nomes de jogadores e fases
         self.audio=AudioManager(pygame,ROOT)
-        self.game=Game(self.input,self.audio,ROOT)
+        self.game=Game(self.input,self.audio,ROOT,storage=ROOT/'storage')
         self.accumulator=0.0
 
     def run(self):
